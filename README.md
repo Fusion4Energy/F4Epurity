@@ -18,10 +18,10 @@ Activate the virtual environment. When activated, the package and all of its dep
 ```bash
 source env/bin/activate
 ```
-Clone the repository containing the code from the [GitHub repository](https://git.ccfe.ac.uk/avalenti/f4e_impurity_assessment/-/tree/master/).
+Clone the repository containing the code from the [GitHub repository](https://github.com/Fusion4Energy/F4Epurity).
 
 ```bash 
-git clone git@git.ccfe.ac.uk:username/f4e_impurity_assessment.git
+git clone git@github.com:Fusion4Energy/F4Epurity.git
 ```
 
 Enter the directory containing the code which can now be installed. 

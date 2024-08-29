@@ -1,4 +1,4 @@
-import argparse
+from jsonargparse import ArgumentParser, ActionConfigFile
 import csv
 import datetime
 import json
@@ -24,11 +24,22 @@ from f4epurity.utilities import (
 )
 
 
-def parse_arguments():
+def parse_arguments(args_list: list[str] | None = None):
     # Define the command-line arguments for the tool
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description="Approximate the deviation in activity and dose rate based on local DR/NCR"
     )
+    # put the config file first so that other command lines can ovveride its contents
+    parser.add_argument("--cfg", action=ActionConfigFile, help="path to config file")
+    # for testing purposes it is nice to allow an optional argument to change
+    # the default run directory
+    parser.add_argument(
+        "--root_output",
+        type=str,
+        default="output",
+        help="Root directory for output files",
+    )
+
     parser.add_argument(
         "--element",
         required=True,
@@ -116,7 +127,7 @@ def parse_arguments():
         "--location", type=str, help="Location of the workstation(s) e.g. Nb cell"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(args_list)
 
     # If a location is specified a workstation must also be given and vice versa
     if (args.workstation is None) != (args.location is None):
@@ -148,7 +159,7 @@ def calculate_dose_for_source(args, x1, y1, z1, run_dir, x2=None, y2=None, z2=No
 
     # Read the decay data file
     with pkg_resources.path("f4epurity.resources", "Decay2020.json") as decay_data_path:
-        with open(decay_data_path, "r") as fp:
+        with open(decay_data_path, "r", encoding="utf-8") as fp:
             decay_data = json.load(fp)
 
     print("Performing Collapse and Calculating Reaction Rates...")
@@ -262,7 +273,7 @@ def calculate_dose_at_workstations(
             if x2 is None
             else f"{run_dir}/dose_{x1}_{y1}_{z1}_to_{x2}_{y2}_{z2}_{args.location}.csv"
         )
-        with open(filename, "w", newline="") as f:
+        with open(filename, "w", newline="", encoding="utf8") as f:
             writer = csv.writer(f)
 
             writer.writerow(["Workstation", "Delta Dose (micro Sieverts per hour)"])
@@ -293,12 +304,13 @@ def calculate_dose_at_workstations(
 
 def process_sources(args):
     # Create a unique directory for this run
+    root = args.root_output
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    run_dir = f"output/F4Epurity_{timestamp}"
+    run_dir = f"{root}/F4Epurity_{timestamp}"
     os.makedirs(run_dir, exist_ok=True)
 
     # Write command line arguments to metadata.json
-    with open(f"{run_dir}/metadata.json", "w") as f:
+    with open(f"{run_dir}/metadata.json", "w", encoding="utf-8") as f:
         json.dump(vars(args), f, indent=4)
 
     dose_arrays = []
@@ -348,7 +360,10 @@ def process_sources(args):
             )
 
             with open(
-                f"{run_dir}/dose_{args.location}_total.csv", "w", newline=""
+                f"{run_dir}/dose_{args.location}_total.csv",
+                "w",
+                newline="",
+                encoding="utf-8",
             ) as f:
                 writer = csv.writer(f)
                 writer.writerow(["Workstation", "Dose"])
@@ -364,8 +379,8 @@ def process_sources(args):
                     writer.writerow([workstation, max_dose_str])
 
 
-def main():
-    args = parse_arguments()
+def main(args_list: list[str] | None = None):
+    args = parse_arguments(args_list)
     process_sources(args)
 
 

@@ -1,0 +1,61 @@
+import os
+from f4epurity.main import parse_arguments
+import pytest
+
+
+# path to the test files
+# get the path to this file
+cp = os.path.dirname(os.path.abspath(__file__))
+TESTFILES = os.path.join(cp, "data", "cli")
+
+
+def test_cli_command(tmpdir):
+    # Define the CLI command to test
+    flux_path = f"{TESTFILES}/flux.vtu"
+
+    command = [
+        "--element",
+        "Ta",
+        "--delta_impurity",
+        "0.1",  # weight percentage
+        "--input_flux",
+        "dummy",
+        "--irrad_scenario",
+        "SA2",
+        "--x1",
+        "-835",
+        "--y1",
+        "1994",
+        "--z1",
+        "1230",
+        "--decay_time",
+        "1e6",  # seconds
+        "--root_output",
+        str(tmpdir),
+        "--input_flux",
+        str(flux_path),
+    ]
+
+    # Run the command
+    args = parse_arguments(command)
+    assert args.x1 == [-835]
+
+
+@pytest.mark.parametrize("format", ["json", "yaml"])
+def test_cli_cfg(tmpdir, format):
+    # Define the CLI command to test
+    config_path = f"{TESTFILES}/cfg_test.{format}"
+    flux_path = f"{TESTFILES}/flux.vtu"
+    command = [
+        "--cfg",
+        str(config_path),
+        # override the dummy input flux
+        "--input_flux",
+        str(flux_path),
+        "--root_output",
+        str(tmpdir),
+    ]
+
+    args = parse_arguments(command)
+    assert args.input_flux == flux_path  # check override works
+    assert args.irrad_scenario == "SA2"  # check a random value

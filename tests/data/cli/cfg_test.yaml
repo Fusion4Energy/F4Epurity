@@ -1,0 +1,8 @@
+element: Ta
+delta_impurity: 0.1
+input_flux: dummy
+irrad_scenario: SA2
+x1: [-835]
+y1: [1994]
+z1: [1230]
+decay_time: 1e6

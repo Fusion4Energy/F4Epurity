@@ -1,6 +1,6 @@
 element: Ta
 delta_impurity: 0.1
-input_flux: dummy
+input_flux: dummy/path.vtu
 irrad_scenario: SA2
 x1: [-835]
 y1: [1994]

@@ -133,6 +133,8 @@ def parse_arguments(args_list: list[str] | None = None):
     if (args.workstation is None) != (args.location is None):
         parser.error("--workstation and --location must be supplied together")
 
+    del args.cfg  # to avoid issues down the line, job has been done
+
     return args
 
 

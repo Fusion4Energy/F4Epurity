@@ -59,3 +59,52 @@ def test_cli_cfg(tmpdir, format):
     args = parse_arguments(command)
     assert args.input_flux == flux_path  # check override works
     assert args.irrad_scenario == "SA2"  # check a random value
+
+
+def test_csv_source_parsing():
+
+    base_commands = [
+        "--element",
+        "Ta",
+        "--delta_impurity",
+        "0.1",  # weight percentage
+        "--input_flux",
+        "dummy",
+        "--irrad_scenario",
+        "SA2",
+        "--decay_time",
+        "1e6",  # seconds
+    ]
+
+    # provide both csv and coordinates should cause an error
+    additional_commands = [
+        "--x1",
+        "-835",
+        "--sources_csv",
+        "dummy",
+    ]
+
+    commands = base_commands + additional_commands
+    with pytest.raises(SystemExit):
+        parse_arguments(commands)
+
+    # provide only one or two of the three coordinates should cause an error
+    additional_commands = [
+        "--x1",
+        "-835",
+        "--y1",
+        "511",
+    ]
+
+    commands = base_commands + additional_commands
+    with pytest.raises(SystemExit):
+        parse_arguments(commands)
+
+    # provide only the .csv is ok
+    additional_commands = [
+        "--sources_csv",
+        "dummy",
+    ]
+
+    commands = base_commands + additional_commands
+    parse_arguments(commands)

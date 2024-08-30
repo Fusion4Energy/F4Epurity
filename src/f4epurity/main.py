@@ -64,24 +64,31 @@ def parse_arguments(args_list: list[str] | None = None):
         help="Irradiation scenario. SA2 and DT1 are available or supply path to file with user defined scenario",
     )
 
+    # instead of x1, y1 and z1 location accept also a .csv file
+    parser.add_argument(
+        "--sources_csv",
+        type=str,
+        help="CSV file containing coordinates for point/line sources. Columns: x1, y1, z1, (x2, y2, z2)",
+    )
+
     parser.add_argument(
         "--x1",
         nargs="+",
-        required=True,
+        # required=True,
         type=float,
         help="x coordinate of point source",
     )
     parser.add_argument(
         "--y1",
         nargs="+",
-        required=True,
+        # required=True,
         type=float,
         help="y coordinate of point source",
     )
     parser.add_argument(
         "--z1",
         nargs="+",
-        required=True,
+        # required=True,
         type=float,
         help="z coordinate of point source",
     )
@@ -132,6 +139,12 @@ def parse_arguments(args_list: list[str] | None = None):
     # If a location is specified a workstation must also be given and vice versa
     if (args.workstation is None) != (args.location is None):
         parser.error("--workstation and --location must be supplied together")
+
+    # only one between sources_csv and x1, y1, z1 should be provided
+    if args.sources_csv and (args.x1 or args.y1 or args.z1):
+        parser.error("--sources_csv and --x1, --y1, --z1 are mutually exclusive")
+    if not args.sources_csv and not (args.x1 and args.y1 and args.z1):
+        parser.error("One between --sources_csv and --x1, --y1, --z1 must be provided")
 
     del args.cfg  # to avoid issues down the line, job has been done
 

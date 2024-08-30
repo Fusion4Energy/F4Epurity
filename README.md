@@ -114,6 +114,18 @@ z1: [1230]
 decay_time: 1e6
 ```
 
+Finally, if the study requires to assess a large number of source points (or lines), e.g. hundreds of valves in a rooom where the impurity content has been changed, it may become cumbersome to list all the coordinates in either the CLI or even in the configuration file. In this case, the ``--sources_csv`` option can be used which accepts a path to a .csv file containing the locations of the sources, e.g.:
+```csv
+x1,y1,z1,x2,y2,z2
+-835,1994,1230,-835,1994,1231
+-834,1994,1230,-834,1994,1231
+```
+Clearly, if point sources are to be considered, [x2, y2, z2] can be omitted.
+The code will throw errors if:
+- the column names differ from what reported here
+- not all necessary columns are present (either 3 or 6)
+- the ``--sources_csv`` and ``--x1 --y2 ...`` options are tried to be provided at the same time
+
 
 **All results are ouput per gram of material**.
 

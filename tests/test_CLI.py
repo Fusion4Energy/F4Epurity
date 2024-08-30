@@ -1,5 +1,5 @@
 import os
-from f4epurity.main import parse_arguments
+from f4epurity.main import parse_arguments, _validate_source_coordinates_input
 import pytest
 
 
@@ -108,3 +108,43 @@ def test_csv_source_parsing():
 
     commands = base_commands + additional_commands
     parse_arguments(commands)
+
+
+def test_validate_source_coordinates_input():
+    flux_path = f"{TESTFILES}/flux.vtu"
+    base_commands = [
+        "--element",
+        "Ta",
+        "--delta_impurity",
+        "0.1",  # weight percentage
+        "--input_flux",
+        flux_path,
+        "--irrad_scenario",
+        "SA2",
+        "--decay_time",
+        "1e6",  # seconds
+    ]
+
+    # provide a point
+    csv_path = f"{TESTFILES}/sources1.csv"
+    additional_commands = ["--sources_csv", csv_path]
+    commands = base_commands + additional_commands
+    args = parse_arguments(commands)
+    args = _validate_source_coordinates_input(args)
+    assert len(args.x1) == 2
+
+    # provide lines
+    csv_path = f"{TESTFILES}/sources2.csv"
+    additional_commands = ["--sources_csv", csv_path]
+    commands = base_commands + additional_commands
+    args = parse_arguments(commands)
+    _validate_source_coordinates_input(args)
+    assert len(args.x2) == 2
+
+    # incorrect format
+    csv_path = f"{TESTFILES}/sources3.csv"
+    additional_commands = ["--sources_csv", csv_path]
+    commands = base_commands + additional_commands
+    args = parse_arguments(commands)
+    with pytest.raises(KeyError):
+        _validate_source_coordinates_input(args)

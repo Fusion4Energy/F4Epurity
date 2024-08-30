@@ -1,4 +1,4 @@
-from jsonargparse import ArgumentParser, ActionConfigFile
+from jsonargparse import ArgumentParser, ActionConfigFile, Namespace
 import csv
 import datetime
 import json
@@ -24,7 +24,7 @@ from f4epurity.utilities import (
 )
 
 
-def parse_arguments(args_list: list[str] | None = None):
+def parse_arguments(args_list: list[str] | None = None) -> Namespace:
     # Define the command-line arguments for the tool
     parser = ArgumentParser(
         description="Approximate the deviation in activity and dose rate based on local DR/NCR"
@@ -317,6 +317,26 @@ def calculate_dose_at_workstations(
                 writer.writerow([workstation, max_dose_str])
 
 
+def _validate_source_coordinates_input(args: Namespace) -> Namespace:
+    if args.sources_csv:
+        try:
+            # Read the CSV file
+            coordinates = pd.read_csv(args.sources_csv)
+            args.x1 = coordinates["x1"].tolist()
+            args.y1 = coordinates["y1"].tolist()
+            args.z1 = coordinates["z1"].tolist()
+            # also the second point may be provided
+            if len(coordinates.columns) > 3:
+                args.x2 = coordinates["x2"].tolist()
+                args.y2 = coordinates["y2"].tolist()
+                args.z2 = coordinates["z2"].tolist()
+        except KeyError as e:
+            raise KeyError(
+                "CSV file must contain columns 'x1', 'y1', 'z1' and optionally 'x2', 'y2', 'z2'"
+            ) from e
+    return args
+
+
 def process_sources(args):
     # Create a unique directory for this run
     root = args.root_output
@@ -327,6 +347,9 @@ def process_sources(args):
     # Write command line arguments to metadata.json
     with open(f"{run_dir}/metadata.json", "w", encoding="utf-8") as f:
         json.dump(vars(args), f, indent=4)
+
+    # Check if a CSV file was provided
+    args = _validate_source_coordinates_input(args)
 
     dose_arrays = []
     # Check if a second point was provided - line source

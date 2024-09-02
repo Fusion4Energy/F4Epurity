@@ -1,4 +1,4 @@
-from jsonargparse import ArgumentParser, ActionConfigFile
+from jsonargparse import ArgumentParser, ActionConfigFile, Namespace
 import csv
 import datetime
 import json
@@ -24,7 +24,7 @@ from f4epurity.utilities import (
 )
 
 
-def parse_arguments(args_list: list[str] | None = None):
+def parse_arguments(args_list: list[str] | None = None) -> Namespace:
     # Define the command-line arguments for the tool
     parser = ArgumentParser(
         description="Approximate the deviation in activity and dose rate based on local DR/NCR"
@@ -64,24 +64,31 @@ def parse_arguments(args_list: list[str] | None = None):
         help="Irradiation scenario. SA2 and DT1 are available or supply path to file with user defined scenario",
     )
 
+    # instead of x1, y1 and z1 location accept also a .csv file
+    parser.add_argument(
+        "--sources_csv",
+        type=str,
+        help="CSV file containing coordinates for point/line sources. Columns: x1, y1, z1, (x2, y2, z2)",
+    )
+
     parser.add_argument(
         "--x1",
         nargs="+",
-        required=True,
+        # required=True,
         type=float,
         help="x coordinate of point source",
     )
     parser.add_argument(
         "--y1",
         nargs="+",
-        required=True,
+        # required=True,
         type=float,
         help="y coordinate of point source",
     )
     parser.add_argument(
         "--z1",
         nargs="+",
-        required=True,
+        # required=True,
         type=float,
         help="z coordinate of point source",
     )
@@ -132,6 +139,12 @@ def parse_arguments(args_list: list[str] | None = None):
     # If a location is specified a workstation must also be given and vice versa
     if (args.workstation is None) != (args.location is None):
         parser.error("--workstation and --location must be supplied together")
+
+    # only one between sources_csv and x1, y1, z1 should be provided
+    if args.sources_csv and (args.x1 or args.y1 or args.z1):
+        parser.error("--sources_csv and --x1, --y1, --z1 are mutually exclusive")
+    if not args.sources_csv and not (args.x1 and args.y1 and args.z1):
+        parser.error("One between --sources_csv and --x1, --y1, --z1 must be provided")
 
     del args.cfg  # to avoid issues down the line, job has been done
 
@@ -304,6 +317,26 @@ def calculate_dose_at_workstations(
                 writer.writerow([workstation, max_dose_str])
 
 
+def _validate_source_coordinates_input(args: Namespace) -> Namespace:
+    if args.sources_csv:
+        try:
+            # Read the CSV file
+            coordinates = pd.read_csv(args.sources_csv)
+            args.x1 = coordinates["x1"].tolist()
+            args.y1 = coordinates["y1"].tolist()
+            args.z1 = coordinates["z1"].tolist()
+            # also the second point may be provided
+            if len(coordinates.columns) > 3:
+                args.x2 = coordinates["x2"].tolist()
+                args.y2 = coordinates["y2"].tolist()
+                args.z2 = coordinates["z2"].tolist()
+        except KeyError as e:
+            raise KeyError(
+                "CSV file must contain columns 'x1', 'y1', 'z1' and optionally 'x2', 'y2', 'z2'"
+            ) from e
+    return args
+
+
 def process_sources(args):
     # Create a unique directory for this run
     root = args.root_output
@@ -314,6 +347,9 @@ def process_sources(args):
     # Write command line arguments to metadata.json
     with open(f"{run_dir}/metadata.json", "w", encoding="utf-8") as f:
         json.dump(vars(args), f, indent=4)
+
+    # Check if a CSV file was provided
+    args = _validate_source_coordinates_input(args)
 
     dose_arrays = []
     # Check if a second point was provided - line source

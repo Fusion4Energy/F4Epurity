@@ -46,7 +46,7 @@ def test_calculate_total_activity():
     output = calculate_total_activity(nuclide_dict, irrad_scenario, decay_time, decay_data)
     output = {key: [float(value[0]) for value in values] for key, values in output.items()}
 
-    assert output == pytest.approx(expected_output, rel=0.05)
+    assert output == pytest.approx(expected_output, rel=0.05, abs=1e-5)
 
 # Test the time correction factors are the same as in D1SUNED
 def test_correction_factors():

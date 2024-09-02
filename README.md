@@ -84,6 +84,37 @@ f4epurity --element Co --delta_impurity 0.05 --input_flux ./flux_spectrum.vtr --
 ```
 A *csv* file is output containing the result for the deviation in dose at the requested workstations. For the list of available workstations, the user should consult the *workstations.xlsx* document in the code resources. 
 
+Since the number of options to be provided is high, users can also provide a ``.json`` or a ``.yaml`` configuration using the ``--cfg`` option:
+```bash
+f4epurity --cfg path/to/config.json
+```
+
+The structure of these files is very simple and looks like the following for the .json:
+```json
+{
+    "element": "Ta",
+    "delta_impurity": 0.1,
+    "input_flux": "dummy",
+    "irrad_scenario": "SA2",
+    "x1": [-835],
+    "y1": [1994],
+    "z1": [1230],
+    "decay_time": 1e6
+}
+```
+and the .yaml:
+```yaml
+element: Ta
+delta_impurity: 0.1
+input_flux: dummy
+irrad_scenario: SA2
+x1: [-835]
+y1: [1994]
+z1: [1230]
+decay_time: 1e6
+```
+
+
 **All results are ouput per gram of material**.
 
 ## Reporting Bugs

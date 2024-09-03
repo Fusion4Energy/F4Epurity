@@ -1,7 +1,7 @@
 import numpy as np
 import pyvista as pv
 import sys
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 
 
 def extract_flux_values(grid, cell_ids):
@@ -75,7 +75,9 @@ def get_flux_from_vtk(filepath, x1, y1, z1, x2=None, y2=None, z2=None):
 def extract_xs(parent, product, element):
     xs_values = []
     # Get the file path to the xs data
-    with pkg_resources.path("f4epurity.resources.xs", f"{element}_xs") as xs_data_path:
+    with as_file(
+        files("f4epurity.resources.xs").joinpath(f"{element}_xs")
+    ) as xs_data_path:
         # Read the text file containing the xs data
         with open(xs_data_path, "r") as file:
             lines = file.readlines()

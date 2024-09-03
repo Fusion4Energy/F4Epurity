@@ -95,7 +95,7 @@ def test_correction_factors():
             nuclide = normalise_nuclide_name(nuclide)
             updated_activity[nuclide] = nuclide_activity
 
-    # Set a relative tolerance of 5%
-    assert updated_activity[nuclide][0] / 1e25 / 1e-14 == pytest.approx(
-        time_correction_factors[nuclide], rel=0.05
-    )
+        # Set a relative tolerance of 5%
+        assert updated_activity[nuclide][0][0] / 1e25 / 1e-14 == pytest.approx(
+            time_correction_factors[nuclide], rel=0.05
+        )

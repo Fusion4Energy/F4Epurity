@@ -3,8 +3,9 @@ import pyvista as pv
 import sys
 import importlib.resources as pkg_resources
 
+
 def extract_flux_values(grid, cell_ids):
-    # Check if cell_ids is a single integer, if so, convert to list 
+    # Check if cell_ids is a single integer, if so, convert to list
     if isinstance(cell_ids, int):
         cell_ids = [cell_ids]
 
@@ -13,7 +14,7 @@ def extract_flux_values(grid, cell_ids):
     for cell in cell_ids:
         flux_bin_values = []
         # Determine the number of bins dynamically - tool should be flexible to handle any bin structure
-        bin_keys = [key for key in grid.cell_data.keys() if key.startswith('ValueBin-')]
+        bin_keys = [key for key in grid.cell_data.keys() if key.startswith("ValueBin-")]
         for bin_key in bin_keys:
             flux_bin = grid.cell_data[bin_key][cell]
             flux_bin_values.append(flux_bin)
@@ -22,27 +23,40 @@ def extract_flux_values(grid, cell_ids):
 
     return np.array(flux_spectrum)
 
+
 def get_flux_from_vtk(filepath, x1, y1, z1, x2=None, y2=None, z2=None):
     # Load the VTR file
     grid = pv.read(filepath)
 
     # Get the bounds of the grid (flux map)
-    bounds = grid.bounds 
+    bounds = grid.bounds
 
     # Check if the input position is within the grid bounds
-    if not (bounds[0] <= x1 <= bounds[1] and bounds[2] <= y1 <= bounds[3] and bounds[4] <= z1 <= bounds[5]):
+    if not (
+        bounds[0] <= x1 <= bounds[1]
+        and bounds[2] <= y1 <= bounds[3]
+        and bounds[4] <= z1 <= bounds[5]
+    ):
         print("Error: The supplied point is not within the flux map")
         sys.exit(1)
 
     # If a second point is provided, handle the line source case
     if x2 is not None and y2 is not None and z2 is not None:
         # Check if the second input position is within the grid bounds
-        if not (bounds[0] <= x2 <= bounds[1] and bounds[2] <= y2 <= bounds[3] and bounds[4] <= z2 <= bounds[5]):
-            print("Error: The supplied line source extends beyond or is not within the flux map")
+        if not (
+            bounds[0] <= x2 <= bounds[1]
+            and bounds[2] <= y2 <= bounds[3]
+            and bounds[4] <= z2 <= bounds[5]
+        ):
+            print(
+                "Error: The supplied line source extends beyond or is not within the flux map"
+            )
             sys.exit(1)
 
         # Extract the cells that are intersected by the line
-        cell_ids = pv.DataSet.find_cells_intersecting_line(grid, [x1, y1, z1], [x2, y2, z2])
+        cell_ids = pv.DataSet.find_cells_intersecting_line(
+            grid, [x1, y1, z1], [x2, y2, z2]
+        )
 
         # Get the flux values for each energy bin at the intersected cells
         flux_spectrum = extract_flux_values(grid, cell_ids)
@@ -57,12 +71,13 @@ def get_flux_from_vtk(filepath, x1, y1, z1, x2=None, y2=None, z2=None):
 
     return np.array(flux_spectrum)
 
+
 def extract_xs(parent, product, element):
     xs_values = []
     # Get the file path to the xs data
-    with pkg_resources.path('f4epurity.resources.xs', f'{element}_xs') as xs_data_path:
+    with pkg_resources.path("f4epurity.resources.xs", f"{element}_xs") as xs_data_path:
         # Read the text file containing the xs data
-        with open(xs_data_path, 'r') as file:
+        with open(xs_data_path, "r") as file:
             lines = file.readlines()
     found = False
     for line in lines:
@@ -77,10 +92,11 @@ def extract_xs(parent, product, element):
                 xs_values.append(float(split_line[2]))
         elif len(split_line) == 3:
             # Look for the parent and daughter isotopes requested
-            reaction = split_line[0] + ' ' + split_line[2]
-            if reaction == parent + ' ' + product:
+            reaction = split_line[0] + " " + split_line[2]
+            if reaction == parent + " " + product:
                 found = True
     return xs_values
+
 
 # Mathematical operation for collapsing the cross section with the flux
 def perform_collapse(xs_values, flux):
@@ -96,6 +112,7 @@ def perform_collapse(xs_values, flux):
     sigma_eff = np.sum(xs_group * flux) / total_flux
 
     return sigma_eff
+
 
 # Function to collapse the flux spectrum with the cross section data
 def collapse_flux(xs_values, filepath_flux, x1, y1, z1, x2=None, y2=None, z2=None):

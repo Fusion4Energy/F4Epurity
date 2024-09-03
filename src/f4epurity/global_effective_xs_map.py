@@ -2,7 +2,7 @@ import argparse
 import datetime
 import json
 import os
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 
 import numpy as np
 import pyvista as pv
@@ -18,9 +18,10 @@ def write_effective_xs_map(element, filepath_flux, run_dir):
 
     effective_xs = []
 
-    xs_file_path = pkg_resources.path("f4epurity.resources.xs", f"{element}_xs")
+    # Path to the cross-section data file for the given element
+    xs_file_path = files("f4epurity.resources.xs").joinpath(f"{element}_xs")
 
-    with xs_file_path as fp:
+    with as_file(xs_file_path) as fp:
         reactions = get_reactions_from_file(fp)
 
     # Loop over each reaction channel for the given element to output effective cross section for each

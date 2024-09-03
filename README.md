@@ -84,6 +84,49 @@ f4epurity --element Co --delta_impurity 0.05 --input_flux ./flux_spectrum.vtr --
 ```
 A *csv* file is output containing the result for the deviation in dose at the requested workstations. For the list of available workstations, the user should consult the *workstations.xlsx* document in the code resources. 
 
+Since the number of options to be provided is high, users can also provide a ``.json`` or a ``.yaml`` configuration using the ``--cfg`` option:
+```bash
+f4epurity --cfg path/to/config.json
+```
+
+The structure of these files is very simple and looks like the following for the .json:
+```json
+{
+    "element": "Ta",
+    "delta_impurity": 0.1,
+    "input_flux": "dummy",
+    "irrad_scenario": "SA2",
+    "x1": [-835],
+    "y1": [1994],
+    "z1": [1230],
+    "decay_time": 1e6
+}
+```
+and the .yaml:
+```yaml
+element: Ta
+delta_impurity: 0.1
+input_flux: dummy
+irrad_scenario: SA2
+x1: [-835]
+y1: [1994]
+z1: [1230]
+decay_time: 1e6
+```
+
+Finally, if the study requires to assess a large number of source points (or lines), e.g. hundreds of valves in a rooom where the impurity content has been changed, it may become cumbersome to list all the coordinates in either the CLI or even in the configuration file. In this case, the ``--sources_csv`` option can be used which accepts a path to a .csv file containing the locations of the sources, e.g.:
+```csv
+x1,y1,z1,x2,y2,z2
+-835,1994,1230,-835,1994,1231
+-834,1994,1230,-834,1994,1231
+```
+Clearly, if point sources are to be considered, [x2, y2, z2] can be omitted.
+The code will throw errors if:
+- the column names differ from what reported here
+- not all necessary columns are present (either 3 or 6)
+- the ``--sources_csv`` and ``--x1 --y2 ...`` options are tried to be provided at the same time
+
+
 **All results are ouput per gram of material**.
 
 ## Reporting Bugs

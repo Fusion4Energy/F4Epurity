@@ -1,6 +1,6 @@
 import sys
 
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import numpy as np
 import pandas as pd
 import pyvista as pv
@@ -10,9 +10,12 @@ from f4epurity.dose import dose_from_line_source
 
 def read_maintenance_locations(workstation, location):
 
+    # Path to the workstations data file
+    workstations_file_path = files("f4epurity.resources").joinpath("workstations.xlsx")
+
     # Read the excel document containing the workstations
-    with pkg_resources.path("f4epurity.resources", "workstations.xlsx") as file_path:
-        df = pd.read_excel(file_path)
+    with as_file(workstations_file_path) as fp:
+        df = pd.read_excel(fp)
 
     # Convert the 'workstation' column to string
     df["workstation"] = df["workstation"].astype(str)

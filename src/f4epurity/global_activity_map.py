@@ -1,7 +1,7 @@
 import argparse
 import datetime
 import copy
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import json
 import numpy as np
 import pandas as pd
@@ -22,9 +22,9 @@ def write_activity_map(
     nist_df = pd.read_excel("resources/NIST_tabulated.xlsx")
 
     # Read the possible reaction channels for the given element
-    xs_file_path = pkg_resources.path("f4epurity.resources.xs", f"{element}_xs")
+    xs_file_path = files("f4epurity.resources.xs").joinpath(f"{element}_xs")
 
-    with xs_file_path as fp:
+    with as_file(xs_file_path) as fp:
         reactions = get_reactions_from_file(fp)
 
     # Read the neutron spectra VTR file

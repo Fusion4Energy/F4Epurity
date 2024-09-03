@@ -2,7 +2,7 @@ import os
 import sys
 from math import pi
 
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import matplotlib.pyplot as plt
 import numpy as np
 import pyevtk
@@ -100,11 +100,10 @@ def dose_from_line_source(dose, x1, y1, z1, x2, y2, z2, x, y, z):
 def is_within_bounds(x1, y1, z1, x2=None, y2=None, z2=None):
 
     # Path to stl files for ITER B1 rooms
-    folder_path = pkg_resources.path("f4epurity.resources", "building_stl_files")
+    folder_path = files("f4epurity.resources").joinpath("building_stl_files")
 
     # Get a list of all STL files in the folder
-    with folder_path as fp:
-        stl_files = [f for f in fp.iterdir() if f.suffix == ".stl"]
+    stl_files = [f for f in folder_path.iterdir() if f.suffix == ".stl"]
 
     # Initialize a list to store the bounds of the STLs
     bounds_list = []

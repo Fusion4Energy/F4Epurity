@@ -36,24 +36,19 @@ def test_calculate_total_activity():
 
     # Define the expected output from FISACT-II calculation
     expected_output = {
-        "Co060": np.array([2.53773e08]),
-        "Co060m": np.array([0.0]),
-        "Nb094m": np.array([0.0]),
-        "Nb094": np.array([5.05530e03]),
-        "Nb092m": np.array([2.14198e04]),
-        "Nb092": np.array([5.32794e-03]),
-        "Nb093m": np.array([6.07715e04]),
+        "Co060": [2.53773E+08],
+        "Co060m": [0.0],
+        "Nb094m": [0.0],
+        "Nb094": [5.05530E+03],
+        "Nb092m": [2.14198E+04],
+        "Nb092": [5.32794E-03],
+        "Nb093m": [6.07715E+04],
     }
 
     # Convert the numpy arrays to floats
-    output = calculate_total_activity(
-        nuclide_dict, irrad_scenario, decay_time, decay_data
-    )
-    output = {
-        key: [float(value[0]) for value in values] for key, values in output.items()
-    }
-
-    assert output == pytest.approx(expected_output, rel=0.05, abs=1e-5)
+    output = calculate_total_activity(nuclide_dict, irrad_scenario, decay_time, decay_data)
+    for key in expected_output:
+        assert output[key][0] == pytest.approx(expected_output[key][0], rel = 0.05)
 
 
 # Test the time correction factors are the same as in D1SUNED

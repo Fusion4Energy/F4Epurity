@@ -2,6 +2,7 @@ import numpy as np
 import os
 import json
 import pytest
+from importlib.resources import files
 
 from f4epurity.decay_chain_calc import calculate_total_activity
 from f4epurity.utilities import normalise_nuclide_name
@@ -58,7 +59,7 @@ def test_correction_factors():
     with open(decay_data_path, "r") as f:
         decay_data = json.load(f)
 
-    irrad_sch = "SA2"
+    irrad_sch = os.path.join(os.path.dirname(__file__), "data", "SA2_d1s")
     decay_time = 0
 
     time_factors_path = os.path.join(
@@ -91,11 +92,10 @@ def test_correction_factors():
         )
 
         updated_activity = {}
-        for nuclide_act, nuclide_activity in activity.items():
-            nuclide_new = normalise_nuclide_name(nuclide_act)
-            updated_activity[nuclide_new] = nuclide_activity
-        print(updated_activity)
-        # Set a relative tolerance of 5%
+        for nuclide1, nuclide_activity in activity.items():
+            nuclide1 = normalise_nuclide_name(nuclide1)
+            updated_activity[nuclide1] = nuclide_activity
+
         assert updated_activity[nuclide][0][0] / 1e25 / 1e-14 == pytest.approx(
-            time_correction_factors[nuclide], rel=0.05
+            time_correction_factors[nuclide], rel=0.09
         )

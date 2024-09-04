@@ -61,8 +61,12 @@ def main():
     parser = argparse.ArgumentParser(
         description="Collapse the cross sections available for an element with the flux spectrum"
     )
-    parser.add_argument("--element", required=True, type=str)
-    parser.add_argument("--input_flux", required=True)
+    parser.add_argument("--element", required=True, type=str, help="E.g. Co, Ta, Nb")
+    parser.add_argument(
+        "--input_flux",
+        required=True,
+        help="Path to the file containing the neutron spectrum",
+    )
 
     args = parser.parse_args()
 

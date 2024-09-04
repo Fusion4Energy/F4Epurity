@@ -3,6 +3,7 @@ import numpy as np
 
 from f4epurity.reaction_rate import calculate_reaction_rate
 
+
 def test_calculate_reaction_rate():
     # Line source case
     delta_impurity = 10

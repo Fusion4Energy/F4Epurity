@@ -132,7 +132,3 @@ The code will throw errors if:
 ## Reporting Bugs
 
 Any bugs or problems faced running the code should be raised as issues in the GitHub repository. Any proposals for new code features should also be raised as issues.
-
-## License
-
-The code is distributed under XXX.

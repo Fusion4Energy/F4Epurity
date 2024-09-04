@@ -71,7 +71,11 @@ def irradiate(time, flux, parent_atoms, nuclide, decay_data_dic, lambda_temp, pa
     nuclides[nuclide] = atoms
 
     # If this is an unstable nuclide loop over each of the decays and work out the number of atoms for those daughters
-    for  decay_type, lambd, daughter in zip(decay_data_dic[nuclide]['Decay_name'][1:], decay_data_dic[nuclide]['lambda'][1:], decay_data_dic[nuclide]['Decay_daughter_names'][1:]):
+    for decay_type, lambd, daughter in zip(
+        decay_data_dic[nuclide]["Decay_name"][1:],
+        decay_data_dic[nuclide]["lambda"][1:],
+        decay_data_dic[nuclide]["Decay_daughter_names"][1:],
+    ):
 
         # Tool cannot handle fission or very long lived >1e19 s half-lives, therefore treat these as stable.
         if decay_type == "f" or lambd < 1e-21:
@@ -163,18 +167,29 @@ def create_dictionary(decay_data, parent, daughters):
         decay_data_dic[i["name"]] = deepcopy(i)
 
         # If this is an unstable nuclide work out the decay constants, including a total lambda for decay
-        if 'half_life_secs' in decay_data_dic[i['name']]:
-            decay_data_dic[i['name']]['lambda'] = [x * math.log(2)/decay_data_dic[i['name']]['half_life_secs'] for x in decay_data_dic[i['name']]['BR']]
-            decay_data_dic[i['name']]['lambda'].insert(0,sum(decay_data_dic[i['name']]['lambda']))
-            decay_data_dic[i['name']]['Decay_daughter_names'].insert(0,i['name'])
-            decay_data_dic[i['name']]['Decay_name'].insert(0,"RR")
+        if "half_life_secs" in decay_data_dic[i["name"]]:
+            decay_data_dic[i["name"]]["lambda"] = [
+                x * math.log(2) / decay_data_dic[i["name"]]["half_life_secs"]
+                for x in decay_data_dic[i["name"]]["BR"]
+            ]
+            decay_data_dic[i["name"]]["lambda"].insert(
+                0, sum(decay_data_dic[i["name"]]["lambda"])
+            )
+            decay_data_dic[i["name"]]["Decay_daughter_names"].insert(0, i["name"])
+            decay_data_dic[i["name"]]["Decay_name"].insert(0, "RR")
 
         # If this is the parent then add the reactions and reaction rates as lambda
-        if i['name'] == parent:
-            decay_data_dic[parent]['Decay_daughter_names'] = [parent]+[daughter for daughter in daughters]
-            decay_data_dic[parent]['lambda'] = [sum([daughters[daughter] for daughter in daughters])]+[daughters[daughter] for daughter in daughters]
-            decay_data_dic[i['name']]['Decay_name'] = ["RR"]* len(decay_data_dic[parent]['lambda'])
-    
+        if i["name"] == parent:
+            decay_data_dic[parent]["Decay_daughter_names"] = [parent] + [
+                daughter for daughter in daughters
+            ]
+            decay_data_dic[parent]["lambda"] = [
+                sum([daughters[daughter] for daughter in daughters])
+            ] + [daughters[daughter] for daughter in daughters]
+            decay_data_dic[i["name"]]["Decay_name"] = ["RR"] * len(
+                decay_data_dic[parent]["lambda"]
+            )
+
     if parent not in decay_data_dic:
         raise Exception("Parent {} not in decay data".format(parent))
     for daughter in daughters:

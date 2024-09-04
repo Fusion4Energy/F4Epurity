@@ -3,7 +3,7 @@ import csv
 import datetime
 import json
 import os
-import importlib.resources as pkg_resources
+from importlib.resources import files, as_file
 import pandas as pd
 
 from f4epurity.decay_chain_calc import calculate_total_activity
@@ -154,10 +154,11 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
 # Main function
 def calculate_dose_for_source(args, x1, y1, z1, run_dir, x2=None, y2=None, z2=None):
 
-    nist_filepath = pkg_resources.path("f4epurity.resources", "NIST_tabulated.xlsx")
+    # Path to the NIST data file
+    nist_file_path = files("f4epurity.resources").joinpath("NIST_tabulated.xlsx")
 
     # Read the tabulated NIST data
-    with nist_filepath as fp:
+    with as_file(nist_file_path) as fp:
         nist_df = pd.read_excel(fp)
 
     # Expand input element to natural isotopes
@@ -166,16 +167,20 @@ def calculate_dose_for_source(args, x1, y1, z1, run_dir, x2=None, y2=None, z2=No
     # Dictionary to store reaction rates
     reaction_rates = {}
 
-    xs_file_path = pkg_resources.path("f4epurity.resources.xs", f"{args.element}_xs")
+    # Path to the cross-section data file for the given element
+    xs_file_path = files("f4epurity.resources.xs").joinpath(f"{args.element}_xs")
 
     # Get reactions available for the selected element from the cross-section file
-    with xs_file_path as fp:
+    with as_file(xs_file_path) as fp:
         reactions = get_reactions_from_file(fp)
 
+    # Path to the decay data file
+    decay_data_path = files("f4epurity.resources").joinpath("Decay2020.json")
+
     # Read the decay data file
-    with pkg_resources.path("f4epurity.resources", "Decay2020.json") as decay_data_path:
-        with open(decay_data_path, "r", encoding="utf-8") as fp:
-            decay_data = json.load(fp)
+    with as_file(decay_data_path) as fp:
+        with open(fp, "r") as json_file:
+            decay_data = json.load(json_file)
 
     print("Performing Collapse and Calculating Reaction Rates...")
     # Populate the dictionary with the reaction rates for each possible reaction channel for a given element
@@ -216,12 +221,11 @@ def calculate_dose_for_source(args, x1, y1, z1, run_dir, x2=None, y2=None, z2=No
     # Initialize a list to store the total dose for each element
     total_dose = None
 
-    dose_matrix_resource_path = pkg_resources.path(
-        "f4epurity.resources", "F4E_dosematrix.xlsx"
-    )
+    # Path to the dose matrix data file
+    dose_matrix_file_path = files("f4epurity.resources").joinpath("F4E_dosematrix.xlsx")
 
     # Load the data into a pandas DataFrame
-    with dose_matrix_resource_path as fp:
+    with as_file(dose_matrix_file_path) as fp:
         dose_factors_df = pd.read_excel(fp)
 
     print("Calculating the Dose...")

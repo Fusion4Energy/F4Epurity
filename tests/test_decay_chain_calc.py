@@ -59,7 +59,7 @@ def test_correction_factors():
         decay_data = json.load(f)
 
     irrad_sch = "SA2"
-    decay_time = 1e6
+    decay_time = 0
 
     time_factors_path = os.path.join(
         os.path.dirname(__file__), "data", "d1s_time_correction_SA2"
@@ -91,10 +91,10 @@ def test_correction_factors():
         )
 
         updated_activity = {}
-        for nuclide, nuclide_activity in activity.items():
-            nuclide = normalise_nuclide_name(nuclide)
-            updated_activity[nuclide] = nuclide_activity
-
+        for nuclide_act, nuclide_activity in activity.items():
+            nuclide_new = normalise_nuclide_name(nuclide_act)
+            updated_activity[nuclide_new] = nuclide_activity
+        print(updated_activity)
         # Set a relative tolerance of 5%
         assert updated_activity[nuclide][0][0] / 1e25 / 1e-14 == pytest.approx(
             time_correction_factors[nuclide], rel=0.05

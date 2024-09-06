@@ -78,7 +78,7 @@ def irradiate(time, flux, parent_atoms, nuclide, decay_data_dic, lambda_temp, pa
     ):
 
         # Tool cannot handle fission or very long lived >1e19 s half-lives, therefore treat these as stable.
-        if decay_type == "f" or lambd < 1e-21:
+        if decay_type == "f" or ("BR" in decay_data_dic[nuclide] and lambd < 1e-20):
             continue
 
         # Change the lambda to include the branching ratio for this decay
@@ -91,16 +91,16 @@ def irradiate(time, flux, parent_atoms, nuclide, decay_data_dic, lambda_temp, pa
             continue
 
         # Irradiate this nuclide and work out the number of each nuclide in the decay chain
-        nuclide_out = irradiate(
-            time, flux, parent_atoms, daughter, decay_data_dic, lambda_temp, parent
+        nuclides_out = irradiate(
+            time,flux, parent_atoms, daughter, decay_data_dic, lambda_temp, parent
         )
 
-        # Add the nuclides to a total list of atoms for each nuclide
-        for nuclide in nuclide_out:
-            if nuclide in nuclides:
-                nuclides[nuclide] += nuclide_out[nuclide]
+        # Add the nuclides to a total list of atoms for each nuclide  
+        for nuclide_out in nuclides_out:
+            if nuclide_out in nuclides:
+                nuclides[nuclide_out] += nuclides_out[nuclide_out]
             else:
-                nuclides[nuclide] = nuclide_out[nuclide]
+                nuclides[nuclide_out] = nuclides_out[nuclide_out]
 
         # Remove last lambda and move back up the chain.
         lambda_temp.pop()

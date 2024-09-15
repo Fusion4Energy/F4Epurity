@@ -159,7 +159,9 @@ def is_within_bounds(x1, y1, z1, x2=None, y2=None, z2=None):
 
 
 # Function to write the dose values to a vtk file
-def write_vtk_file(dose, x1, y1, z1, run_dir, x2=None, y2=None, z2=None):
+def write_vtk_file(
+    dose, x1, y1, z1, run_dir, x2=None, y2=None, z2=None, output_all_vtr=False
+):
 
     # Get the bounds in which to make the plot
     plot_bounds = is_within_bounds(x1, y1, z1, x2, y2, z2)
@@ -232,11 +234,12 @@ def write_vtk_file(dose, x1, y1, z1, run_dir, x2=None, y2=None, z2=None):
     # Create the output directory if it doesn't exist
     os.makedirs("output", exist_ok=True)
 
-    if x2 is not None and y2 is not None and z2 is not None:
-        filename = f"{run_dir}/dose_{x1}_{y1}_{z1}_to_{x2}_{y2}_{z2}"
-    else:
-        filename = f"{run_dir}/dose_{x1}_{y1}_{z1}"
-    pyevtk.hl.gridToVTK(filename, x, y, z, cellData={"Dose": dose_array})
+    if output_all_vtr:
+        if x2 is not None and y2 is not None and z2 is not None:
+            filename = f"{run_dir}/dose_{x1}_{y1}_{z1}_to_{x2}_{y2}_{z2}"
+        else:
+            filename = f"{run_dir}/dose_{x1}_{y1}_{z1}"
+        pyevtk.hl.gridToVTK(filename, x, y, z, cellData={"Dose": dose_array})
 
     return dose_array, x, y, z, plot_bounds
 

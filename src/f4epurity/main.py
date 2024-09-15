@@ -134,6 +134,12 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
         "--location", type=str, help="Location of the workstation(s) e.g. Nb cell"
     )
 
+    parser.add_argument(
+        "--output_all_vtr",
+        action="store_true",
+        help="Output individual VTR files for each source",
+    )
+
     args = parser.parse_args(args_list)
 
     # If a location is specified a workstation must also be given and vice versa
@@ -145,6 +151,28 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
         parser.error("--sources_csv and --x1, --y1, --z1 are mutually exclusive")
     if not args.sources_csv and not (args.x1 and args.y1 and args.z1):
         parser.error("One between --sources_csv and --x1, --y1, --z1 must be provided")
+
+    # Set output_all_vtr to True if only one set of coordinates is given for point source
+    if (
+        args.x1
+        and len(args.x1) == 1
+        and args.y1
+        and len(args.y1) == 1
+        and args.z1
+        and len(args.z1) == 1
+    ):
+        args.output_all_vtr = True
+
+    # Set output_all_vtr to True if only one line source is specified
+    if (
+        args.x2
+        and len(args.x2) == 1
+        and args.y2
+        and len(args.y2) == 1
+        and args.z2
+        and len(args.z2) == 1
+    ):
+        args.output_all_vtr = True
 
     del args.cfg  # to avoid issues down the line, job has been done
 
@@ -241,7 +269,7 @@ def calculate_dose_for_source(
     print("Writing the Dose Map...")
     # Write the dose array and output to a VTR file
     dose_array, x, y, z, plot_bounds = write_vtk_file(
-        total_dose, x1, y1, z1, run_dir, x2, y2, z2
+        total_dose, x1, y1, z1, run_dir, x2, y2, z2, args.output_all_vtr
     )
 
     # Run quick plot function to output png image

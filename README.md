@@ -8,6 +8,8 @@ The tool works for a point or line deviation and outputs a 3D map of the deviati
 
 ## Installation
 
+**Python versions lower than 3.10 are not supported. Both Windows and Linux OS are supported.**
+
 It is recommended that the user sets up a virtual environment to install the code. The following steps detail set up of a [virtual environment](https://docs.python.org/3/tutorial/venv.html) and installation of the tool.
 
 ```bash
@@ -28,6 +30,12 @@ Enter the directory containing the code which can now be installed.
 
 ```bash 
 pip install .
+```
+
+To do a developer mode install the following command can be used:
+
+```bash
+pip install -e .
 ```
 
 Each time a user launches a new window or terminal, they need to make sure that the virtual environment is activated using the above *source* command. 

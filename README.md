@@ -20,7 +20,7 @@ Activate the virtual environment. When activated, the package and all of its dep
 ```bash
 source env/bin/activate
 ```
-Clone the repository containing the code from the [GitHub repository](https://github.com/Fusion4Energy/F4Epurity).
+Clone the repository containing the code from the [GitHub repository](https://github.com/Fusion4Energy/F4Epurity). Note that for users without Git installed, you can instead download an archive of the repository, see [here](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives).
 
 ```bash 
 git clone git@github.com:Fusion4Energy/F4Epurity.git
@@ -140,3 +140,15 @@ The code will throw errors if:
 ## Reporting Bugs
 
 Any bugs or problems faced running the code should be raised as issues in the GitHub repository. Any proposals for new code features should also be raised as issues.
+
+## Troubleshooting
+
+Many issues encountered during installation can be resolved by creating a new virtual environment and reinstalling.
+
+Some users may have some restrictions meaning that the entry points are blocked. In this case it is not possible to invoke directly ``f4epurity -h`` in the command line or run the code as a module (``python -m f4epurity -h``). In this case the tool(s) must be ran in the following way:
+
+```bash
+f4epurity ->  python -m f4epurity.main
+f4epurity-xs ->  python -m f4epurity.global_effective_xs_map
+f4epurity-activity ->  python -m f4epurity.global_activity_map
+```

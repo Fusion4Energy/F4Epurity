@@ -8,6 +8,8 @@ The tool works for a point or line deviation and outputs a 3D map of the deviati
 
 ## Installation
 
+**Python versions lower than 3.10 are not supported. Both Windows and Linux OS are supported.**
+
 It is recommended that the user sets up a virtual environment to install the code. The following steps detail set up of a [virtual environment](https://docs.python.org/3/tutorial/venv.html) and installation of the tool.
 
 ```bash
@@ -18,7 +20,7 @@ Activate the virtual environment. When activated, the package and all of its dep
 ```bash
 source env/bin/activate
 ```
-Clone the repository containing the code from the [GitHub repository](https://github.com/Fusion4Energy/F4Epurity).
+Clone the repository containing the code from the [GitHub repository](https://github.com/Fusion4Energy/F4Epurity). Note that for users without Git installed, you can instead download an archive of the repository, see [here](https://docs.github.com/en/repositories/working-with-files/using-files/downloading-source-code-archives).
 
 ```bash 
 git clone git@github.com:Fusion4Energy/F4Epurity.git
@@ -28,6 +30,12 @@ Enter the directory containing the code which can now be installed.
 
 ```bash 
 pip install .
+```
+
+To do a developer mode install the following command can be used:
+
+```bash
+pip install -e .
 ```
 
 Each time a user launches a new window or terminal, they need to make sure that the virtual environment is activated using the above *source* command. 
@@ -57,7 +65,7 @@ All of the output files from running the tool are placed into a timestamped outp
 
 Currently the tool supports specification of a point source or a line source. 
 
-An example of how the tool would be used for a *0.05%* deviation in *Cobalt* content at the location with coordinates, *x=250, y=3124, z=10* is shown below. The path to the *VTR* file containing the input flux spectrum (ITER ex-bioshield, 5 group) is given and the assumed irradiation scenario is *SA2*. The deviation in dose is request at *1E6 seconds*.
+An example of how the tool would be used for a *0.05%* deviation in *Cobalt* content at the location with coordinates, *x=250, y=3124, z=10* is shown below. The path to the *VTR* file containing the input flux spectrum (ITER ex-bioshield, 5 group) is given. Note that the code expects the spectrum to be in the default format output by [F4Enix](https://f4enix.readthedocs.io/en/latest/index.html) e.g. "Value - ..", "ValueBin-..."). The irradiation scenario is *SA2*. The deviation in dose is request at *1E6 seconds*.
 
 ```bash
 f4epurity --element Co --delta_impurity 0.05 --input_flux ./flux_spectrum.vtr --x1 250 --y1 3124 --z1 10 --irrad_scenario SA2 --decay_time 1e6
@@ -132,3 +140,15 @@ The code will throw errors if:
 ## Reporting Bugs
 
 Any bugs or problems faced running the code should be raised as issues in the GitHub repository. Any proposals for new code features should also be raised as issues.
+
+## Troubleshooting
+
+Many issues encountered during installation can be resolved by creating a new virtual environment and reinstalling.
+
+Some users may have some restrictions meaning that the entry points are blocked. In this case it is not possible to invoke directly ``f4epurity -h`` in the command line or run the code as a module (``python -m f4epurity -h``). In this case the tool(s) must be ran in the following way:
+
+```bash
+f4epurity ->  python -m f4epurity.main
+f4epurity-xs ->  python -m f4epurity.global_effective_xs_map
+f4epurity-activity ->  python -m f4epurity.global_activity_map
+```

@@ -134,6 +134,12 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
         "--location", type=str, help="Location of the workstation(s) e.g. Nb cell"
     )
 
+    parser.add_argument(
+        "--output_all_vtr",
+        action="store_true",
+        help="Output individual VTR files for each source",
+    )
+
     args = parser.parse_args(args_list)
 
     # If a location is specified a workstation must also be given and vice versa
@@ -146,41 +152,54 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
     if not args.sources_csv and not (args.x1 and args.y1 and args.z1):
         parser.error("One between --sources_csv and --x1, --y1, --z1 must be provided")
 
+    # Set output_all_vtr to True if only one set of coordinates is given for point source
+    if (
+        args.x1
+        and len(args.x1) == 1
+        and args.y1
+        and len(args.y1) == 1
+        and args.z1
+        and len(args.z1) == 1
+    ):
+        args.output_all_vtr = True
+
+    # Set output_all_vtr to True if only one line source is specified
+    if (
+        args.x2
+        and len(args.x2) == 1
+        and args.y2
+        and len(args.y2) == 1
+        and args.z2
+        and len(args.z2) == 1
+    ):
+        args.output_all_vtr = True
+
     del args.cfg  # to avoid issues down the line, job has been done
 
     return args
 
 
 # Main function
-def calculate_dose_for_source(args, x1, y1, z1, run_dir, x2=None, y2=None, z2=None):
-
-    # Path to the NIST data file
-    nist_file_path = files("f4epurity.resources").joinpath("NIST_tabulated.xlsx")
-
-    # Read the tabulated NIST data
-    with as_file(nist_file_path) as fp:
-        nist_df = pd.read_excel(fp)
+def calculate_dose_for_source(
+    args,
+    x1,
+    y1,
+    z1,
+    run_dir,
+    nist_df,
+    reactions,
+    decay_data,
+    dose_factors_df,
+    x2=None,
+    y2=None,
+    z2=None,
+):
 
     # Expand input element to natural isotopes
     isotopes = get_isotopes(args.element, nist_df)
 
     # Dictionary to store reaction rates
     reaction_rates = {}
-
-    # Path to the cross-section data file for the given element
-    xs_file_path = files("f4epurity.resources.xs").joinpath(f"{args.element}_xs")
-
-    # Get reactions available for the selected element from the cross-section file
-    with as_file(xs_file_path) as fp:
-        reactions = get_reactions_from_file(fp)
-
-    # Path to the decay data file
-    decay_data_path = files("f4epurity.resources").joinpath("Decay2020.json")
-
-    # Read the decay data file
-    with as_file(decay_data_path) as fp:
-        with open(fp, "r") as json_file:
-            decay_data = json.load(json_file)
 
     print("Performing Collapse and Calculating Reaction Rates...")
     # Populate the dictionary with the reaction rates for each possible reaction channel for a given element
@@ -221,13 +240,6 @@ def calculate_dose_for_source(args, x1, y1, z1, run_dir, x2=None, y2=None, z2=No
     # Initialize a list to store the total dose for each element
     total_dose = None
 
-    # Path to the dose matrix data file
-    dose_matrix_file_path = files("f4epurity.resources").joinpath("F4E_dosematrix.xlsx")
-
-    # Load the data into a pandas DataFrame
-    with as_file(dose_matrix_file_path) as fp:
-        dose_factors_df = pd.read_excel(fp)
-
     print("Calculating the Dose...")
     # Determine the Dose for each nuclide
     for nuclide, nuclide_activity in activities.items():
@@ -257,7 +269,7 @@ def calculate_dose_for_source(args, x1, y1, z1, run_dir, x2=None, y2=None, z2=No
     print("Writing the Dose Map...")
     # Write the dose array and output to a VTR file
     dose_array, x, y, z, plot_bounds = write_vtk_file(
-        total_dose, x1, y1, z1, run_dir, x2, y2, z2
+        total_dose, x1, y1, z1, run_dir, x2, y2, z2, args.output_all_vtr
     )
 
     # Run quick plot function to output png image
@@ -355,6 +367,24 @@ def process_sources(args):
     # Check if a CSV file was provided
     args = _validate_source_coordinates_input(args)
 
+    # Read the necessary files once
+    nist_file_path = files("f4epurity.resources").joinpath("NIST_tabulated.xlsx")
+    with as_file(nist_file_path) as fp:
+        nist_df = pd.read_excel(fp)
+
+    xs_file_path = files("f4epurity.resources.xs").joinpath(f"{args.element}_xs")
+    with as_file(xs_file_path) as fp:
+        reactions = get_reactions_from_file(fp)
+
+    decay_data_path = files("f4epurity.resources").joinpath("Decay2020.json")
+    with as_file(decay_data_path) as fp:
+        with open(fp, "r") as json_file:
+            decay_data = json.load(json_file)
+
+    dose_matrix_file_path = files("f4epurity.resources").joinpath("F4E_dosematrix.xlsx")
+    with as_file(dose_matrix_file_path) as fp:
+        dose_factors_df = pd.read_excel(fp)
+
     dose_arrays = []
     # Check if a second point was provided - line source
     if args.x2 is not None and args.y2 is not None and args.z2 is not None:
@@ -366,7 +396,18 @@ def process_sources(args):
             args.x1, args.y1, args.z1, args.x2, args.y2, args.z2
         ):
             dose_array, x, y, z, dose = calculate_dose_for_source(
-                args, x1, y1, z1, run_dir, x2, y2, z2
+                args,
+                x1,
+                y1,
+                z1,
+                run_dir,
+                nist_df,
+                reactions,
+                decay_data,
+                dose_factors_df,
+                x2,
+                y2,
+                z2,
             )
             dose_arrays.append(dose_array)
             calculate_dose_at_workstations(
@@ -387,7 +428,15 @@ def process_sources(args):
         # Handle multiple coordinates being provided
         for x1, y1, z1 in zip(args.x1, args.y1, args.z1):
             dose_array, x, y, z, dose = calculate_dose_for_source(
-                args, x1, y1, z1, run_dir
+                args,
+                x1,
+                y1,
+                z1,
+                run_dir,
+                nist_df,
+                reactions,
+                decay_data,
+                dose_factors_df,
             )
             dose_arrays.append(dose_array)
             calculate_dose_at_workstations(args, dose, x1, y1, z1, run_dir)

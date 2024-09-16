@@ -18,8 +18,9 @@ def write_activity_map(
     element, filepath_flux, delta_impurity, decay_time, irrad_scenario, run_dir
 ):
 
-    # Read the tabulated NIST data
-    nist_df = pd.read_excel("resources/NIST_tabulated.xlsx")
+    nist_file_path = files("f4epurity.resources").joinpath("NIST_tabulated.xlsx")
+    with as_file(nist_file_path) as fp:
+        nist_df = pd.read_excel(fp)
 
     # Read the possible reaction channels for the given element
     xs_file_path = files("f4epurity.resources.xs").joinpath(f"{element}_xs")
@@ -30,9 +31,10 @@ def write_activity_map(
     # Read the neutron spectra VTR file
     neutron_spectra = pv.read(filepath_flux)
 
-    # Load the decay data from the json file
-    file = open("resources/Decay2020.json")
-    decay_data = json.load(file)
+    decay_data_path = files("f4epurity.resources").joinpath("Decay2020.json")
+    with as_file(decay_data_path) as fp:
+        with open(fp, "r") as json_file:
+            decay_data = json.load(json_file)
 
     reaction_rates = {}
     activities = {}
@@ -69,7 +71,9 @@ def write_activity_map(
                 delta_impurity, sigma_eff, flux_bin_values
             )
 
-            reaction_rates[parent]["reactions"][product] = reaction_rate
+            reaction_rate_array = np.array([reaction_rate])
+
+            reaction_rates[parent]["reactions"][product] = reaction_rate_array
 
             print(reaction_rates)
 

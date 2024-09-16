@@ -75,7 +75,11 @@ def sum_vtr_files(dose_arrays, x, y, z, run_dir):
 
     # Write the summed dose to a VTK file
     pyevtk.hl.gridToVTK(
-        f"{run_dir}/dose_total", x, y, z, cellData={"Dose_Total": sum_dose}
+        f"{run_dir}/dose_total",
+        x,
+        y,
+        z,
+        cellData={"Total $\Delta$ Dose ($\mu$Sv/hr)": sum_dose},
     )
 
 

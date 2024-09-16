@@ -239,7 +239,9 @@ def write_vtk_file(
             filename = f"{run_dir}/dose_{x1}_{y1}_{z1}_to_{x2}_{y2}_{z2}"
         else:
             filename = f"{run_dir}/dose_{x1}_{y1}_{z1}"
-        pyevtk.hl.gridToVTK(filename, x, y, z, cellData={"Dose": dose_array})
+        pyevtk.hl.gridToVTK(
+            filename, x, y, z, cellData={"$\Delta$ Dose ($\mu$Sv/hr)": dose_array}
+        )
 
     return dose_array, x, y, z, plot_bounds
 

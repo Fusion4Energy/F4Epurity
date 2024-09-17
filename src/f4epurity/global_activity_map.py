@@ -75,14 +75,12 @@ def write_activity_map(
 
             reaction_rates[parent]["reactions"][product] = reaction_rate_array
 
-            print(reaction_rates)
 
         # Calculate the total activity for this voxel
         activity = calculate_total_activity(
             reaction_rates, irrad_scenario, decay_time, decay_data
         )
 
-        print(activity)
 
         # Append the activity to the list for each nuclide
         for nuclide, value in activity.items():

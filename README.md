@@ -65,7 +65,7 @@ All of the output files from running the tool are placed into a timestamped outp
 
 Currently the tool supports specification of a point source or a line source. 
 
-An example of how the tool would be used for a *0.05%* deviation in *Cobalt* content at the location with coordinates, *x=250, y=3124, z=10* is shown below. The path to the *VTR* file containing the input flux spectrum (ITER ex-bioshield, 5 group) is given. Note that the code expects the spectrum to be in the default format output by [F4Enix](https://f4enix.readthedocs.io/en/latest/index.html) e.g. "Value - ..", "ValueBin-..."). The irradiation scenario is *SA2*. The deviation in dose is request at *1E6 seconds*.
+An example of how the tool would be used for a *0.05%* deviation in *Cobalt* content at the location with coordinates, *x=250, y=3124, z=10* is shown below. The path to the *VTR* file containing the input flux spectrum (ITER ex-bioshield, 5 group) is given. Note that the code expects the spectrum to be in the default format output by [F4Enix](https://f4enix.readthedocs.io/en/latest/index.html) e.g. "Value - ..", "ValueBin-..."). The irradiation scenario is *SA2*. The deviation in dose is requested at *1E6* seconds.
 
 ```bash
 f4epurity --element Co --delta_impurity 0.05 --input_flux ./flux_spectrum.vtr --x1 250 --y1 3124 --z1 10 --irrad_scenario SA2 --decay_time 1e6
@@ -91,6 +91,14 @@ The user may also request to evaluate the change in dose at certain locations, e
 f4epurity --element Co --delta_impurity 0.05 --input_flux ./flux_spectrum.vtr --x1 250 -245 --y1 3124 2341 --z1 10 0 --x2 300 412 --y2 3500 2600 --z2 50 5 --irrad_scenario SA2 --decay_time 1e6 --workstation 'all' --location 'NB cell'
 ```
 A *csv* file is output containing the result for the deviation in dose at the requested workstations. For the list of available workstations, the user should consult the *workstations.xlsx* document in the code resources. 
+
+The user may have already calculated the activity of certain radionuclides and wish to simply output the resulting dose maps. This is possible using the ``--activities_file`` option. The path to a text file containing a list of the nuclides and their corresponding activities. The activity values should be specified per gram i.e. Bq/g. An example is shown below. *x1*, *y1* and *z1* are also required in this case for the location of the source.
+
+```bash
+Co060 2300000
+Co060m 43000
+Nb094 12000
+```
 
 Since the number of options to be provided is high, users can also provide a ``.json`` or a ``.yaml`` configuration using the ``--cfg`` option:
 ```bash
@@ -139,7 +147,7 @@ The code will throw errors if:
 
 ## Reporting Bugs
 
-Any bugs or problems faced running the code should be raised as issues in the GitHub repository. Any proposals for new code features should also be raised as issues.
+Any bugs or problems faced running the code should be raised as [issues](https://github.com/Fusion4Energy/F4Epurity/issues) in the GitHub repository. Any proposals for new code features should also be raised as issues.
 
 ## Troubleshooting
 

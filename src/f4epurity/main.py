@@ -2,6 +2,7 @@ from jsonargparse import ArgumentParser, ActionConfigFile, Namespace
 import csv
 import datetime
 import json
+import numpy as np
 import os
 from importlib.resources import files, as_file
 import pandas as pd
@@ -23,13 +24,15 @@ from f4epurity.utilities import (
     get_reactions_from_file,
 )
 
+from typing import List, Optional
 
-def parse_arguments(args_list: list[str] | None = None) -> Namespace:
+
+def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
     # Define the command-line arguments for the tool
     parser = ArgumentParser(
         description="Approximate the deviation in activity and dose rate based on local DR/NCR"
     )
-    # put the config file first so that other command lines can ovveride its contents
+    # put the config file first so that other command lines can override its contents
     parser.add_argument("--cfg", action=ActionConfigFile, help="path to config file")
     # for testing purposes it is nice to allow an optional argument to change
     # the default run directory
@@ -40,55 +43,58 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
         help="Root directory for output files",
     )
 
+    # Add option to provide a list of isotopes and their activities
+    parser.add_argument(
+        "--activities_file",
+        type=str,
+        help="Path to a text file containing isotopes and their pre-computed activities",
+    )
+
+    # Add other arguments here
     parser.add_argument(
         "--element",
-        required=True,
         type=str,
         help="Element with deviation e.g. Co, Ta, Nb",
     )
     parser.add_argument(
         "--delta_impurity",
-        required=True,
         type=float,
         help="Deviation in the elements weight as a percentage",
     )
     parser.add_argument(
         "--input_flux",
-        required=True,
         help="Provide a path to the vtr file with the neutron spectrum",
     )
     parser.add_argument(
         "--irrad_scenario",
-        required=True,
         type=str,
         help="Irradiation scenario. SA2 and DT1 are available or supply path to file with user defined scenario",
     )
-
-    # instead of x1, y1 and z1 location accept also a .csv file
+    parser.add_argument(
+        "--decay_time",
+        type=float,
+        help="Decay time for calculating dose in seconds",
+    )
     parser.add_argument(
         "--sources_csv",
         type=str,
         help="CSV file containing coordinates for point/line sources. Columns: x1, y1, z1, (x2, y2, z2)",
     )
-
     parser.add_argument(
         "--x1",
         nargs="+",
-        # required=True,
         type=float,
         help="x coordinate of point source",
     )
     parser.add_argument(
         "--y1",
         nargs="+",
-        # required=True,
         type=float,
         help="y coordinate of point source",
     )
     parser.add_argument(
         "--z1",
         nargs="+",
-        # required=True,
         type=float,
         help="z coordinate of point source",
     )
@@ -110,21 +116,12 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
         type=float,
         help="z coordinate of the second point for line source",
     )
-
-    parser.add_argument(
-        "--decay_time",
-        required=True,
-        type=float,
-        help="Decay time for calculating dose in seconds",
-    )
-
     parser.add_argument(
         "--plot",
         nargs=2,
         metavar=("slice_axis", "slice_location"),
         help="Output image of dose mesh at a given location",
     )
-
     parser.add_argument(
         "--workstation",
         type=str,
@@ -133,14 +130,27 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
     parser.add_argument(
         "--location", type=str, help="Location of the workstation(s) e.g. Nb cell"
     )
-
     parser.add_argument(
         "--output_all_vtr",
         action="store_true",
         help="Output individual VTR files for each source",
     )
 
+    # Parse the arguments
     args = parser.parse_args(args_list)
+
+    # Manually check required arguments if activities_file is not provided
+    if not args.activities_file:
+        required_args = [
+            "element",
+            "delta_impurity",
+            "input_flux",
+            "irrad_scenario",
+            "decay_time",
+        ]
+        missing_args = [arg for arg in required_args if getattr(args, arg) is None]
+        if missing_args:
+            parser.error(f"Missing required arguments: {', '.join(missing_args)}")
 
     # If a location is specified a workstation must also be given and vice versa
     if (args.workstation is None) != (args.location is None):
@@ -179,6 +189,16 @@ def parse_arguments(args_list: list[str] | None = None) -> Namespace:
     return args
 
 
+# For user supplied list of activities, convert the text file to a dictionary
+def parse_isotopes_activities_file(file_path):
+    activities = {}
+    with open(file_path, "r") as file:
+        for line in file:
+            isotope, activity = line.strip().split()
+            activities[isotope] = [np.array([float(activity)])]
+    return activities
+
+
 # Main function
 def calculate_dose_for_source(
     args,
@@ -194,49 +214,50 @@ def calculate_dose_for_source(
     y2=None,
     z2=None,
 ):
+    if args.activities_file:
+        activities = parse_isotopes_activities_file(args.activities_file)
+    else:
+        # Expand input element to natural isotopes
+        isotopes = get_isotopes(args.element, nist_df)
 
-    # Expand input element to natural isotopes
-    isotopes = get_isotopes(args.element, nist_df)
+        # Dictionary to store reaction rates
+        reaction_rates = {}
 
-    # Dictionary to store reaction rates
-    reaction_rates = {}
+        print("Performing Collapse and Calculating Reaction Rates...")
+        # Populate the dictionary with the reaction rates for each possible reaction channel for a given element
+        for parent, product in reactions:
+            if parent not in isotopes:
+                continue
 
-    print("Performing Collapse and Calculating Reaction Rates...")
-    # Populate the dictionary with the reaction rates for each possible reaction channel for a given element
-    for parent, product in reactions:
-        if parent not in isotopes:
-            continue
+            if parent not in reaction_rates:
+                # Determine the number of atoms of the parent nuclide
+                number_of_atoms = calculate_number_of_atoms(
+                    parent, args.delta_impurity, nist_df
+                )
 
-        if parent not in reaction_rates:
-            # Determine the number of atoms of the parent nuclide
-            number_of_atoms = calculate_number_of_atoms(
-                parent, args.delta_impurity, nist_df
+                # Add the parent to the dictionary with the number of atoms and an empty dictionary for the reaction rates
+                reaction_rates[parent] = {"atoms": number_of_atoms, "reactions": {}}
+
+            xs_values = extract_xs(parent, product, args.element)
+
+            # Get the flux value from the VTK file and collapse with the 5-group cross section
+            sigma_eff, flux_spectrum = collapse_flux(
+                xs_values, args.input_flux, x1, y1, z1, x2, y2, z2
             )
 
-            # Add the parent to the dictionary with the number of atoms and an empty dictionary for the reaction rates
-            reaction_rates[parent] = {"atoms": number_of_atoms, "reactions": {}}
+            # Calculate the reaction rate based on the flux and effective cross section
+            reaction_rate = calculate_reaction_rate(
+                args.delta_impurity, sigma_eff, flux_spectrum
+            )
 
-        xs_values = extract_xs(parent, product, args.element)
+            # Store the reaction rate in the dictionary
+            reaction_rates[parent]["reactions"][product] = reaction_rate
 
-        # Get the flux value from the VTK file and collapse with the 5-group cross section
-        sigma_eff, flux_spectrum = collapse_flux(
-            xs_values, args.input_flux, x1, y1, z1, x2, y2, z2
+        # Call the decay_chain_calculator to determine the activity of each nuclide
+        print("Calculating Activities...")
+        activities = calculate_total_activity(
+            reaction_rates, args.irrad_scenario, args.decay_time, decay_data
         )
-
-        # Calculate the reaction rate based on the flux and effective cross section
-        reaction_rate = calculate_reaction_rate(
-            args.delta_impurity, sigma_eff, flux_spectrum
-        )
-
-        # Store the reaction rate in the dictionary
-        reaction_rates[parent]["reactions"][product] = reaction_rate
-
-    # Call the decay_chain_calculator to determine the activity of each nuclide
-    print("Calculating Activities...")
-    activities = calculate_total_activity(
-        reaction_rates, args.irrad_scenario, args.decay_time, decay_data
-    )
-
     # Initialize a list to store the total dose for each element
     total_dose = None
 
@@ -367,20 +388,28 @@ def process_sources(args):
     # Check if a CSV file was provided
     args = _validate_source_coordinates_input(args)
 
-    # Read the necessary files once
-    nist_file_path = files("f4epurity.resources").joinpath("NIST_tabulated.xlsx")
-    with as_file(nist_file_path) as fp:
-        nist_df = pd.read_excel(fp)
+    # Conditionally load files based on the presence of activities_file
+    if not args.activities_file:
+        # Read the necessary files once
+        nist_file_path = files("f4epurity.resources").joinpath("NIST_tabulated.xlsx")
+        with as_file(nist_file_path) as fp:
+            nist_df = pd.read_excel(fp)
 
-    xs_file_path = files("f4epurity.resources.xs").joinpath(f"{args.element}_xs")
-    with as_file(xs_file_path) as fp:
-        reactions = get_reactions_from_file(fp)
+        xs_file_path = files("f4epurity.resources.xs").joinpath(f"{args.element}_xs")
+        with as_file(xs_file_path) as fp:
+            reactions = get_reactions_from_file(fp)
 
-    decay_data_path = files("f4epurity.resources").joinpath("Decay2020.json")
-    with as_file(decay_data_path) as fp:
-        with open(fp, "r") as json_file:
-            decay_data = json.load(json_file)
+        decay_data_path = files("f4epurity.resources").joinpath("Decay2020.json")
+        with as_file(decay_data_path) as fp:
+            with open(fp, "r") as json_file:
+                decay_data = json.load(json_file)
+    else:
+        # If activities_file is provided, skip loading unnecessary files
+        nist_df = None
+        reactions = None
+        decay_data = None
 
+    # Load the dose matrix file (always needed)
     dose_matrix_file_path = files("f4epurity.resources").joinpath("F4E_dosematrix.xlsx")
     with as_file(dose_matrix_file_path) as fp:
         dose_factors_df = pd.read_excel(fp)

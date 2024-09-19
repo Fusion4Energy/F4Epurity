@@ -111,7 +111,7 @@ def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
         "--m",
         nargs="+",
         type=float,
-        help="Mass of the component where the impurity is located in kg",
+        help="Mass of the component where the impurity is located in g",
         default=None,
     )
     parser.add_argument(

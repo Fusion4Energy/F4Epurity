@@ -143,6 +143,9 @@ The code will throw errors if:
 - not all necessary columns are present (either 3 or 6)
 - the ``--sources_csv`` and ``--x1 --y2 ...`` options are tried to be provided at the same time
 
+If multiple sources are provided, by default, it is assumed that all the components 
+where the impurities are located have the same mass. In this way, the dose deviation maps can be easily sum toghether and the results are provided as mSv/h/g of component. If this assumption is not valid, masses (in g) for each component need to be provided through the ``--m`` option. This data can be also provided through the ``--sources_csv`` option adding a column ``m`` to the .csv file.
+
 
 **All results are ouput per gram of material**.
 

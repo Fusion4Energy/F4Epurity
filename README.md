@@ -1,3 +1,4 @@
+[![Testing](https://github.com/Fusion4Energy/F4Epurity/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Fusion4Energy/F4Epurity/actions/workflows/ci.yml)
 # F4Epurity
 
 ## Description

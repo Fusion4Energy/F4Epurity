@@ -310,7 +310,7 @@ def process_sources(args: Namespace) -> None:
 
     # If more than one dose array is present, sum the dose arrays (multiple sources)
     if len(dose_arrays) > 1:
-        sum_vtr_files(dose_arrays, x, y, z, run_dir)
+        sum_vtr_files(dose_arrays, x, y, z, run_dir, masses=args.m)
         if args.workstation:
             # Get the coordinates and workstation names for the given workstation and location
             coordinates_list, workstation_list = read_maintenance_locations(

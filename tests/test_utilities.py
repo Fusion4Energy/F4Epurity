@@ -9,6 +9,7 @@ from f4epurity.utilities import (
     add_user_irrad_scenario,
     normalise_nuclide_name,
     convert_names,
+    sum_vtr_files,
 )
 
 
@@ -133,3 +134,23 @@ def test_convert_names():
         "Ta181": {"atoms": 20, "reactions": {"Ta182": 5, "Ta182m": 3}},
     }
     assert convert_names(nuc_dict) == expected_result
+
+
+@pytest.mark.parametrize(
+    ["masses", "expected"],
+    [
+        [None, np.ones((2, 2, 2)) * 2],  # simple sum
+        [[1, 4], np.ones((2, 2, 2)) * 5],  # weighted sum
+    ],
+)
+def test_sum_vtr_files(masses, expected, tmpdir):
+    steps = 3
+    x = np.linspace(0, 1, num=steps)
+    y = np.linspace(0, 1, num=steps)
+    z = np.linspace(0, 1, num=steps)
+    dose_array = np.ones((len(x) - 1, len(y) - 1, len(z) - 1))
+    dose_arrays = [dose_array] * 2
+
+    assert (
+        sum_vtr_files(dose_arrays, x, y, z, tmpdir, masses=masses) == expected
+    ).all()

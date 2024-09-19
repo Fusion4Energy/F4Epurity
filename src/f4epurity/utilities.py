@@ -75,20 +75,60 @@ def sum_vtr_files(
     y: np.array,
     z: np.array,
     run_dir: str | os.PathLike,
-) -> None:
+    masses: np.array = None,
+) -> np.array:
+    """Sum the dose arrays from multiple point/line sources and write
+    the summed dose to a VTK file. If no mass array is provided, it is implicitly
+    assumed that the mass of the different components into wich the impurity is
+    located is the same and results are provided as mSv/hr/g (of component).
+    Otherwise, each dose deviation field is multiplied by the mass causing it and
+    the results are provided as mSv/hr.
+
+    Parameters
+    ----------
+    dose_arrays : np.array
+        spatial dose deviation fields for each source
+    x : np.array
+        x coordinates of the grid
+    y : np.array
+        y coordinates of the grid
+    z : np.array
+        z coordinates of the grid
+    run_dir : str | os.PathLike
+        path to the directory where the VTK file will be saved
+    masses : np.array, optional
+        mass of the component where the impurity is located. By default None
+
+    Returns
+    -------
+    sum_dose : np.array
+        summed dose deviation field
+    """
     # Sum the dose arrays from multiple point/line sources
+    dose_arrays = np.array(dose_arrays)
+    if masses is not None:
+        masses = np.array(masses)
+        # Sum the dose arrays weighted by the mass of each
+        dose_arrays = (dose_arrays.T * masses).T
+        label = "Total $\Delta$ Dose ($\mu$Sv/hr)"
+    else:
+        label = "Total $\Delta$ Dose ($\mu$Sv/hr/g)"
+
     sum_dose = np.sum(dose_arrays, axis=0)
 
     os.makedirs("output", exist_ok=True)
 
     # Write the summed dose to a VTK file
+    # results are per gram of component where the impurity is located
     pyevtk.hl.gridToVTK(
         f"{run_dir}/dose_total",
         x,
         y,
         z,
-        cellData={"Total $\Delta$ Dose ($\mu$Sv/hr)": sum_dose},
+        cellData={label: sum_dose},
     )
+
+    return sum_dose
 
 
 def get_reactions_from_file(filename: str | os.PathLike) -> set[tuple[str, str]]:

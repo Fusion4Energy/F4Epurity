@@ -3,10 +3,11 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
+      - developing
 
 jobs:
   build:
@@ -19,10 +20,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -34,7 +35,7 @@ jobs:
           else
             source env/bin/activate
           fi
-          pip install .
+          pip install .[tests]
 
       - name: Run tests
         run: |

@@ -8,7 +8,7 @@ The tool works for a point or line deviation and outputs a 3D map of the deviati
 
 ## Installation
 
-**Python versions lower than 3.10 are not supported. Both Windows and Linux OS are supported.**
+**Python versions lower than 3.10 are not supported (tested versions are 3.10 and 3.11). Both Windows and Linux OS are supported.**
 
 It is recommended that the user sets up a virtual environment to install the code. The following steps detail set up of a [virtual environment](https://docs.python.org/3/tutorial/venv.html) and installation of the tool.
 

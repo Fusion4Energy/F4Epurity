@@ -7,7 +7,7 @@ import pandas as pd
 import pyevtk
 
 
-def get_isotopes(element, nist_df):
+def get_isotopes(element: str, nist_df: pd.DataFrame) -> list[str]:
 
     # Find element and only retrieve those occuring naturally
     isotopes_df = nist_df[
@@ -24,7 +24,9 @@ def get_isotopes(element, nist_df):
     return isotopes
 
 
-def calculate_number_of_atoms(nuclide, delta_impurity, nist_df):
+def calculate_number_of_atoms(
+    nuclide: str, delta_impurity: float, nist_df: pd.DataFrame
+) -> float:
 
     # Get the molar mass for the given isotope
     molar_mass = get_molar_mass(nuclide, nist_df)
@@ -35,7 +37,7 @@ def calculate_number_of_atoms(nuclide, delta_impurity, nist_df):
     return number_of_atoms
 
 
-def get_molar_mass(isotope, nist_df):
+def get_molar_mass(isotope: str, nist_df: pd.DataFrame) -> float:
 
     # Remove leading and trailing spaces from 'Atomic Symbol' column
     nist_df["Atomic Symbol"] = nist_df["Atomic Symbol"].str.strip()
@@ -67,25 +69,71 @@ def get_molar_mass(isotope, nist_df):
     return molar_mass
 
 
-def sum_vtr_files(dose_arrays, x, y, z, run_dir):
+def sum_vtr_files(
+    dose_arrays: np.array,
+    x: np.array,
+    y: np.array,
+    z: np.array,
+    run_dir: str | os.PathLike,
+    masses: np.array = None,
+) -> np.array:
+    """Sum the dose arrays from multiple point/line sources and write
+    the summed dose to a VTK file. If no mass array is provided, it is implicitly
+    assumed that the mass of the different components into wich the impurity is
+    located is the same and results are provided as mSv/hr/g (of component).
+    Otherwise, each dose deviation field is multiplied by the mass causing it and
+    the results are provided as mSv/hr.
+
+    Parameters
+    ----------
+    dose_arrays : np.array
+        spatial dose deviation fields for each source
+    x : np.array
+        x coordinates of the grid
+    y : np.array
+        y coordinates of the grid
+    z : np.array
+        z coordinates of the grid
+    run_dir : str | os.PathLike
+        path to the directory where the VTK file will be saved
+    masses : np.array, optional
+        mass of the component where the impurity is located. By default None
+
+    Returns
+    -------
+    sum_dose : np.array
+        summed dose deviation field
+    """
     # Sum the dose arrays from multiple point/line sources
+    dose_arrays = np.array(dose_arrays)
+    if masses is not None:
+        masses = np.array(masses)
+        # Sum the dose arrays weighted by the mass of each
+        dose_arrays = (dose_arrays.T * masses).T
+        label = "Total $\Delta$ Dose ($\mu$Sv/hr)"
+    else:
+        label = "Total $\Delta$ Dose ($\mu$Sv/hr/g)"
+
     sum_dose = np.sum(dose_arrays, axis=0)
 
     os.makedirs("output", exist_ok=True)
 
     # Write the summed dose to a VTK file
+    # results are per gram of component where the impurity is located
     pyevtk.hl.gridToVTK(
         f"{run_dir}/dose_total",
         x,
         y,
         z,
-        cellData={"Total $\Delta$ Dose ($\mu$Sv/hr)": sum_dose},
+        cellData={label: sum_dose},
     )
 
+    return sum_dose
 
-def get_reactions_from_file(filename):
+
+def get_reactions_from_file(filename: str | os.PathLike) -> set[tuple[str, str]]:
     reactions = set()
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding="utf-8") as file:
         for line in file:
             if "(" in line:  # This characterises specific reaction line
                 reaction = re.split(r"\s+|\(|\)", line)
@@ -95,7 +143,7 @@ def get_reactions_from_file(filename):
     return reactions
 
 
-def normalise_nuclide_name(nuclide):
+def normalise_nuclide_name(nuclide: str) -> str:
     # Split the nuclide name into the element name, the mass number, and 'm' or 'n' if present
     match = re.match(r"([A-Za-z]+)(\d+)([mn]?)", nuclide)
     element_name, mass_number, suffix = match.groups()
@@ -110,7 +158,7 @@ def normalise_nuclide_name(nuclide):
 
 
 # Return the long nuclide name
-def get_name(parent):
+def get_name(parent: str) -> str:
     parts = re.split("(\d+)", parent)
     if len(parts[1]) < 3:
         iso = "0" * (3 - len(parts[1])) + parts[1]
@@ -123,7 +171,7 @@ def get_name(parent):
 
 
 # Convert names of dictionary to long nuclide names
-def convert_names(nuc_dict):
+def convert_names(nuc_dict: dict) -> dict:
 
     new_dict = {}
     for parent in nuc_dict:
@@ -139,7 +187,7 @@ def convert_names(nuc_dict):
     return new_dict
 
 
-def add_user_irrad_scenario(filename, irrad_scenarios):
+def add_user_irrad_scenario(filename: str | os.PathLike, irrad_scenarios: dict) -> None:
     day_to_sec = 24 * 60 * 60
 
     df = pd.read_csv(filename, sep="\s+", header=None, names=["times", "fluxes"])

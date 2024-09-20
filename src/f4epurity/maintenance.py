@@ -165,6 +165,14 @@ def dose_within_workstation(grid_file, box_bounds):
     box = pv.Box(box_bounds)
     # Using the workstation bounds, find the max dose value
     clipped = grid.clip_box(box.bounds, invert=False)
-    max_dose = clipped.cell_data["Dose_Total"].max()
+    # dynamically find the right array name
+    found_name = False
+    for name in clipped.array_names:
+        if "Dose" in name:
+            found_name = name
+            break
+    if not found_name:
+        raise ValueError("No dose array found in the VTR file")
+    max_dose = clipped.cell_data[found_name].max()
 
     return max_dose

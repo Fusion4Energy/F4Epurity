@@ -111,7 +111,7 @@ def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
         "--m",
         nargs="+",
         type=float,
-        help="Mass of the component where the impurity is located in g",
+        help="Mass of the component where the impurity is located in grams",
         default=None,
     )
     parser.add_argument(
@@ -132,6 +132,11 @@ def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
         "--output_all_vtr",
         action="store_true",
         help="Output individual VTR files for each source",
+    )
+    parser.add_argument(
+        "--stl_files",
+        type=str,
+        help="Path to STL files of ITER rooms that can be used for plotting",
     )
 
     # Parse the arguments

@@ -3,10 +3,11 @@ name: CI Pipeline
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
     branches:
-      - master
+      - main
+      - developing
 
 jobs:
   build:
@@ -15,32 +16,30 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: [3.10, 3.11]
+        python-version: ["3.10", "3.11"]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Testing - Linux
+        if: runner.os == 'Linux'
+        run: |
+          set -o pipefail
+          python -m venv env
+          source env/bin/activate
+          pip install .[tests]
+          pytest
+
+      - name: Testing - Windows
+        if: runner.os == 'Windows'
         run: |
           python -m venv env
-          if [ $RUNNER_OS == 'Windows' ]; then
-            .\env\Scripts\activate
-          else
-            source env/bin/activate
-          fi
-          pip install .
-
-      - name: Run tests
-        run: |
-          if [ $RUNNER_OS == 'Windows' ]; then
-            .\env\Scripts\activate
-          else
-            source env/bin/activate
-          fi
+          .\env\Scripts\activate
+          pip install .[tests]
           pytest

@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools >= 69.5.1", "setuptools_scm[toml]>=8.1.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "f4epurity"
+license = {file = "LICENSE"}
+dynamic = ["version"]
+authors = [
+  { name="UKAEA - F4E", email="sc-radiationtransport@f4e.europa.eu" },
+]
+description = "Tool to quantify the impact on the shut down dose rate of a deviation in impurity content of a material"
+readme = "README.md"
+requires-python = ">=3.10"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "pyevtk",
+    "matplotlib",
+    "numpy",
+    "openpyxl",
+    "pyvista",
+    "pandas",
+    "jsonargparse",
+    "scipy",
+]
+[project.optional-dependencies]
+tests = [
+    "pytest",
+    "pytest-cov",
+]
+
+[project.urls]
+Homepage = "https://github.com/Fusion4Energy/F4Epurity"
+Repository = "https://github.com/Fusion4Energy/F4Epurity"
+Documentation = "https://github.com/Fusion4Energy/F4Epurity"
+
+[project.scripts]
+f4epurity = "f4epurity.main:main"
+f4epurity-activity = "f4epurity.global_activity_map:main"
+f4epurity-xs = "f4epurity.global_effective_xs_map:main"
+f4epurity-shielding = "f4epurity.shielding_estimator:main"
+
+[tool.setuptools_scm]
+write_to = "src/_version.py"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]

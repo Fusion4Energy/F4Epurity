@@ -1,3 +1,4 @@
+[![Testing](https://github.com/Fusion4Energy/F4Epurity/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Fusion4Energy/F4Epurity/actions/workflows/ci.yml)
 # F4Epurity
 
 ## Description
@@ -8,7 +9,7 @@ The tool works for a point or line deviation and outputs a 3D map of the deviati
 
 ## Installation
 
-**Python versions lower than 3.10 are not supported. Both Windows and Linux OS are supported.**
+**Python versions lower than 3.10 are not supported (tested versions are 3.10 and 3.11). Both Windows and Linux OS are supported.**
 
 It is recommended that the user sets up a virtual environment to install the code. The following steps detail set up of a [virtual environment](https://docs.python.org/3/tutorial/venv.html) and installation of the tool.
 
@@ -83,7 +84,7 @@ Multiple source terms may also be specified in a single run of the tool. For exa
 f4epurity --element Co --delta_impurity 0.05 --input_flux ./flux_spectrum.vtr --x1 250 -245 --y1 3124 2341 --z1 10 0 --x2 300 412 --y2 3500 2600 --z2 50 5 --irrad_scenario SA2 --decay_time 1e6 --plot z 15
 ```
 
-The output will contain a total dose map summing the contribution from the different source terms. If the ``--output_all_vtr`` flag is given then the individual *VTR* files for all source terms will also be output. In this example the plotting function was also used. This allows a quick method for visualising the dose map which takes two arguments, the plane, *x*, *y* or *z*, and the position. Currently only on-axis slices are supported. 
+The output will contain a total dose map summing the contribution from the different source terms. If the ``--output_all_vtr`` flag is given then the individual *VTR* files for all source terms will also be output. In this example the plotting function was also used. This allows a quick method for visualising the dose map which takes two arguments, the plane, *x*, *y* or *z*, and the position. Currently only on-axis slices are supported. The geometry can be superimposed with this plot if a path to the folder containing the STL file of the geometry is provided. This can be specified using the ``--stl_files`` argument. 
 
 The user may also request to evaluate the change in dose at certain locations, e.g. workstations. In this case, the commands, *--workstation* and *--location* should be provided, where *workstation* is the number of the specific workstation where the dose is requested and *location* is the name of the ITER room. *'all'* can be specified for the *workstation* to output the result at all workstations in the given location. 
 
@@ -142,6 +143,9 @@ The code will throw errors if:
 - not all necessary columns are present (either 3 or 6)
 - the ``--sources_csv`` and ``--x1 --y2 ...`` options are tried to be provided at the same time
 
+If multiple sources are provided, by default, it is assumed that all the components 
+where the impurities are located have the same mass. In this way, the dose deviation maps can be easily sum toghether and the results are provided as mSv/h/g of component. If this assumption is not valid, masses (in g) for each component need to be provided through the ``--m`` option. This data can be also provided through the ``--sources_csv`` option adding a column ``m`` to the .csv file.
+
 
 **All results are ouput per gram of material**.
 
@@ -159,4 +163,5 @@ Some users may have some restrictions meaning that the entry points are blocked.
 f4epurity ->  python -m f4epurity.main
 f4epurity-xs ->  python -m f4epurity.global_effective_xs_map
 f4epurity-activity ->  python -m f4epurity.global_activity_map
+f4epurity-shielding -> python -m f4epurity.shielding_estimator
 ```

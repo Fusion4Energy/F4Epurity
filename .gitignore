@@ -3,3 +3,4 @@ build
 src/f4epurity.egg-info
 .vscode
 output
+src/_version.py

@@ -1,6 +1,6 @@
 import os
-from f4epurity.main import parse_arguments, _validate_source_coordinates_input
 import pytest
+from f4epurity.parsing import parse_arguments
 
 
 # path to the test files
@@ -81,7 +81,7 @@ def test_csv_source_parsing():
         "--x1",
         "-835",
         "--sources_csv",
-        "dummy",
+        f"{TESTFILES}/sources1.csv",
     ]
 
     commands = base_commands + additional_commands
@@ -100,10 +100,26 @@ def test_csv_source_parsing():
     with pytest.raises(SystemExit):
         parse_arguments(commands)
 
+    # provide only different number of masses is a problem
+    additional_commands = [
+        "--x1",
+        "-835",
+        "--y1",
+        "511",
+        "--z1",
+        "1230",
+        "--m",
+        "1 2",
+    ]
+
+    commands = base_commands + additional_commands
+    with pytest.raises(SystemExit):
+        parse_arguments(commands)
+
     # provide only the .csv is ok
     additional_commands = [
         "--sources_csv",
-        "dummy",
+        f"{TESTFILES}/sources1.csv",
     ]
 
     commands = base_commands + additional_commands
@@ -130,7 +146,6 @@ def test_validate_source_coordinates_input():
     additional_commands = ["--sources_csv", csv_path]
     commands = base_commands + additional_commands
     args = parse_arguments(commands)
-    args = _validate_source_coordinates_input(args)
     assert len(args.x1) == 2
 
     # provide lines
@@ -138,13 +153,12 @@ def test_validate_source_coordinates_input():
     additional_commands = ["--sources_csv", csv_path]
     commands = base_commands + additional_commands
     args = parse_arguments(commands)
-    _validate_source_coordinates_input(args)
     assert len(args.x2) == 2
+    assert len(args.m) == 2
 
     # incorrect format
     csv_path = f"{TESTFILES}/sources3.csv"
     additional_commands = ["--sources_csv", csv_path]
     commands = base_commands + additional_commands
-    args = parse_arguments(commands)
     with pytest.raises(KeyError):
-        _validate_source_coordinates_input(args)
+        args = parse_arguments(commands)

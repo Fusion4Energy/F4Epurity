@@ -1,4 +1,3 @@
-import json
 from copy import deepcopy
 
 import math
@@ -7,20 +6,20 @@ import numpy as np
 from f4epurity.utilities import add_user_irrad_scenario, convert_names
 
 # conversion from days to seconds
-day_to_sec = 24 * 60 * 60
-year_to_sec = 365.25 * day_to_sec
+DAY_TO_SEC = 24 * 60 * 60
+YEAR_TO_SEC = 365.25 * DAY_TO_SEC
 
 # Define the known irradiation scenarios
 # (times is a list of length of irradiation periods, fluxes is a list of the relative (to the nominal source strength) source strength for the given irradiation period)
 # REF : ITER_D_8WK64Y
-irrad_scenarios = {
+IRRAD_SCENARIOS = {
     "DT1": {
         "times": [
-            730.5 * day_to_sec,
-            730.5 * day_to_sec,
-            730.5 * day_to_sec,
-            730.5 * day_to_sec,
-            730.5 * day_to_sec,
+            730.5 * DAY_TO_SEC,
+            730.5 * DAY_TO_SEC,
+            730.5 * DAY_TO_SEC,
+            730.5 * DAY_TO_SEC,
+            730.5 * DAY_TO_SEC,
             600,
         ],
         "fluxes": [
@@ -34,10 +33,10 @@ irrad_scenarios = {
     },
     "SA2": {
         "times": [
-            2 * year_to_sec,
-            10 * year_to_sec,
-            0.667 * year_to_sec,
-            1.325 * year_to_sec,
+            2 * YEAR_TO_SEC,
+            10 * YEAR_TO_SEC,
+            0.667 * YEAR_TO_SEC,
+            1.325 * YEAR_TO_SEC,
         ]
         + [3920, 400] * 17
         + [3920, 400] * 3,
@@ -46,8 +45,38 @@ irrad_scenarios = {
 }
 
 
-# Function to work out the number of atoms for a given nuclide, for a given pulse (note this is a recursive function i.e. it calls itself until it reaches the end of a decay chain)
-def irradiate(time, flux, parent_atoms, nuclide, decay_data_dic, lambda_temp, parent):
+def irradiate(
+    time: float,
+    parent_atoms: int,
+    nuclide: str,
+    decay_data_dic: dict,
+    lambda_temp: list,
+    parent: str,
+) -> dict:
+    """Function to work out the number of atoms for a given nuclide, for a
+    given pulse (note this is a recursive function i.e. it calls itself until
+    it reaches the end of a decay chain)
+
+    Parameters
+    ----------
+    time : float
+        decay time in seconds
+    parent_atoms : int
+        number of parent atoms
+    nuclide : str
+        nuclide name
+    decay_data_dic : dict
+        dictionary containing decay data
+    lambda_temp : list
+        list of decay constants
+    parent : str
+        parent nuclide name
+
+    Returns
+    -------
+    dict
+        dictionary containing the number of atoms for each nuclide in the decay chain
+    """
 
     # Set up a temporary dictionary to record the number of each nuclide in the decay chain
     nuclides = {}
@@ -92,10 +121,10 @@ def irradiate(time, flux, parent_atoms, nuclide, decay_data_dic, lambda_temp, pa
 
         # Irradiate this nuclide and work out the number of each nuclide in the decay chain
         nuclides_out = irradiate(
-            time,flux, parent_atoms, daughter, decay_data_dic, lambda_temp, parent
+            time, parent_atoms, daughter, decay_data_dic, lambda_temp, parent
         )
 
-        # Add the nuclides to a total list of atoms for each nuclide  
+        # Add the nuclides to a total list of atoms for each nuclide
         for nuclide_out in nuclides_out:
             if nuclide_out in nuclides:
                 nuclides[nuclide_out] += nuclides_out[nuclide_out]
@@ -108,8 +137,25 @@ def irradiate(time, flux, parent_atoms, nuclide, decay_data_dic, lambda_temp, pa
     return nuclides
 
 
-# Function to get the number of each nuclide from an irradiation schedule
-def get_nuclides(scenario, parent, decay_data_dic, atoms):
+def get_nuclides(scenario: dict, parent: str, decay_data_dic: dict, atoms: int) -> dict:
+    """Function to get the number of each nuclide from an irradiation schedule
+
+    Parameters
+    ----------
+    scenario : dict
+        irradiation scenario
+    parent : str
+        parent nuclide name
+    decay_data_dic : dict
+        dictionary containing decay data
+    atoms : int
+        number of parent atoms
+
+    Returns
+    -------
+    dict
+        dictionary containing the number of atoms for each nuclide in the decay chain
+    """
 
     # Set up a temp array which is used as you move down the decay chain.
     lambda_temp = [0]
@@ -136,7 +182,7 @@ def get_nuclides(scenario, parent, decay_data_dic, atoms):
             # Irradiate this nuclide and work out the number of each nuclide in the decay chain
             out_nuclides = irradiate(
                 time,
-                flux,
+                # flux,
                 init_nuclides[nuclide],
                 nuclide,
                 decay_data_dic,
@@ -157,7 +203,28 @@ def get_nuclides(scenario, parent, decay_data_dic, atoms):
     return sum_nuclides
 
 
-def create_dictionary(decay_data, parent, daughters):
+def create_dictionary(decay_data: dict, parent: str, daughters: list) -> dict:
+    """Function to create a dictionary of decay data for a given parent and daughters
+
+    Parameters
+    ----------
+    decay_data : dict
+        dictionary containing decay data
+    parent : str
+        parent nuclide name
+    daughters : list
+        list of daughter nuclides
+
+    Returns
+    -------
+    dict
+        dictionary containing decay data for the parent and daughters
+
+    Raises
+    ------
+    KeyError
+        if either parents or daughters are not found in the decay data
+    """
 
     # Create decay dictionary
     decay_data_dic = {}
@@ -191,21 +258,41 @@ def create_dictionary(decay_data, parent, daughters):
             )
 
     if parent not in decay_data_dic:
-        raise Exception("Parent {} not in decay data".format(parent))
+        raise KeyError("Parent {} not in decay data".format(parent))
     for daughter in daughters:
         if daughter not in decay_data_dic:
-            raise Exception("Daughter {} not in decay data".format(parent))
+            raise KeyError("Daughter {} not in decay data".format(parent))
 
     return decay_data_dic
 
 
-def calculate_total_activity(nuclide_dict, irrad_scenario, decay_time, decay_data):
+def calculate_total_activity(
+    nuclide_dict: dict, irrad_scenario: dict, decay_time: int, decay_data: dict
+) -> dict:
+    """Function to calculate the total activity of a given nuclide dictionary
 
-    if irrad_scenario not in irrad_scenarios:
-        add_user_irrad_scenario(irrad_scenario, irrad_scenarios)
+    Parameters
+    ----------
+    nuclide_dict : dict
+        dictionary containing nuclide data
+    irrad_scenario : dict
+        irradiation scenario
+    decay_time : int
+        decay time in seconds
+    decay_data : dict
+        dictionary containing decay data
+
+    Returns
+    -------
+    dict
+        dictionary containing the total activity for each nuclide in the nuclide dictionary
+    """
+
+    if irrad_scenario not in IRRAD_SCENARIOS:
+        add_user_irrad_scenario(irrad_scenario, IRRAD_SCENARIOS)
 
     # Get the irradiation scenario and decay constant for the isotope from the dictionaries
-    irrad_scenario = deepcopy(irrad_scenarios[irrad_scenario])
+    irrad_scenario = deepcopy(IRRAD_SCENARIOS[irrad_scenario])
 
     # Decay times should be appended to the end of the irradiation scenario dictionary
     irrad_scenario["times"].append(decay_time)

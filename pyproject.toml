@@ -25,6 +25,7 @@ dependencies = [
     "pyvista",
     "pandas",
     "jsonargparse",
+    "scipy",
 ]
 [project.optional-dependencies]
 tests = [
@@ -41,6 +42,7 @@ Documentation = "https://github.com/Fusion4Energy/F4Epurity"
 f4epurity = "f4epurity.main:main"
 f4epurity-activity = "f4epurity.global_activity_map:main"
 f4epurity-xs = "f4epurity.global_effective_xs_map:main"
+f4epurity-shielding = "f4epurity.shielding_estimator:main"
 
 [tool.setuptools_scm]
 write_to = "src/_version.py"

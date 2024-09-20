@@ -164,7 +164,11 @@ def write_vtk_file(
 ):
 
     # Get the bounds in which to make the plot
-    plot_bounds = is_within_bounds(x1, y1, z1, x2, y2, z2)
+    try:
+        plot_bounds = is_within_bounds(x1, y1, z1, x2, y2, z2)
+    except FileNotFoundError:
+        # temporary fix for the case where the stl files are not available
+        plot_bounds = None
 
     # If the coordinates are outside one of the stls, use an arbitrary volume for writing the mesh
     if plot_bounds is None:
@@ -240,7 +244,7 @@ def write_vtk_file(
         else:
             filename = f"{run_dir}/dose_{x1}_{y1}_{z1}"
         pyevtk.hl.gridToVTK(
-            filename, x, y, z, cellData={"$\Delta$ Dose ($\mu$Sv/hr)": dose_array}
+            filename, x, y, z, cellData={"$\Delta$ Dose ($\mu$Sv/hr/g)": dose_array}
         )
 
     return dose_array, x, y, z, plot_bounds

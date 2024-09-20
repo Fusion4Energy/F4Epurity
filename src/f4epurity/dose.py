@@ -97,13 +97,17 @@ def dose_from_line_source(dose, x1, y1, z1, x2, y2, z2, x, y, z):
     return dose_at_point
 
 
-def is_within_bounds(x1, y1, z1, x2=None, y2=None, z2=None):
+def is_within_bounds(x1, y1, z1, flux_grid_file, x2=None, y2=None, z2=None):
 
     # Path to stl files for ITER B1 rooms
     folder_path = files("f4epurity.resources").joinpath("building_stl_files")
 
     # Get a list of all STL files in the folder
-    stl_files = [f for f in folder_path.iterdir() if f.suffix == ".stl"]
+    try:
+        stl_files = [f for f in folder_path.iterdir() if f.suffix == ".stl"]
+    except FileNotFoundError:
+        # if no stl are provided, use the bounds of the flux grid provided
+        stl_files = [flux_grid_file]
 
     # Initialize a list to store the bounds of the STLs
     bounds_list = []
@@ -160,15 +164,20 @@ def is_within_bounds(x1, y1, z1, x2=None, y2=None, z2=None):
 
 # Function to write the dose values to a vtk file
 def write_vtk_file(
-    dose, x1, y1, z1, run_dir, x2=None, y2=None, z2=None, output_all_vtr=False
+    dose,
+    x1,
+    y1,
+    z1,
+    run_dir,
+    flux_grid_file,
+    x2=None,
+    y2=None,
+    z2=None,
+    output_all_vtr=False,
 ):
 
     # Get the bounds in which to make the plot
-    try:
-        plot_bounds = is_within_bounds(x1, y1, z1, x2, y2, z2)
-    except FileNotFoundError:
-        # temporary fix for the case where the stl files are not available
-        plot_bounds = None
+    plot_bounds = is_within_bounds(x1, y1, z1, flux_grid_file, x2, y2, z2)
 
     # If the coordinates are outside one of the stls, use an arbitrary volume for writing the mesh
     if plot_bounds is None:

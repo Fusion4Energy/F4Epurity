@@ -151,7 +151,16 @@ def calculate_dose_for_source(
     print("Writing the Dose Map...")
     # Write the dose array and output to a VTR file
     dose_array, x, y, z, plot_bounds = write_vtk_file(
-        total_dose, x1, y1, z1, run_dir, x2, y2, z2, args.output_all_vtr
+        total_dose,
+        x1,
+        y1,
+        z1,
+        run_dir,
+        args.input_flux,
+        x2,
+        y2,
+        z2,
+        args.output_all_vtr,
     )
 
     # Run quick plot function to output png image

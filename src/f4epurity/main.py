@@ -157,6 +157,7 @@ def calculate_dose_for_source(
         z1,
         run_dir,
         args.input_flux,
+        args.stl_files,
         x2,
         y2,
         z2,

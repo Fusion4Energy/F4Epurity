@@ -1,3 +1,4 @@
+import logging
 from jsonargparse import Namespace
 import csv
 import datetime
@@ -24,6 +25,11 @@ from f4epurity.utilities import (
     get_reactions_from_file,
 )
 from f4epurity.parsing import parse_arguments, parse_isotopes_activities_file
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 
 # Main function
@@ -84,7 +90,7 @@ def calculate_dose_for_source(
         # Dictionary to store reaction rates
         reaction_rates = {}
 
-        print("Performing Collapse and Calculating Reaction Rates...")
+        logging.info("Performing Collapse and Calculating Reaction Rates...")
         # Populate the dictionary with the reaction rates for each possible reaction channel for a given element
         for parent, product in reactions:
             if parent not in isotopes:
@@ -115,14 +121,14 @@ def calculate_dose_for_source(
             reaction_rates[parent]["reactions"][product] = reaction_rate
 
         # Call the decay_chain_calculator to determine the activity of each nuclide
-        print("Calculating Activities...")
+        logging.info("Calculating Activities...")
         activities = calculate_total_activity(
             reaction_rates, args.irrad_scenario, args.decay_time, decay_data
         )
     # Initialize a list to store the total dose for each element
     total_dose = None
 
-    print("Calculating the Dose...")
+    logging.info("Calculating the Dose...")
     # Determine the Dose for each nuclide
     for nuclide, nuclide_activity in activities.items():
 
@@ -148,7 +154,7 @@ def calculate_dose_for_source(
             else:
                 total_dose = [total + doses for total in total_dose]
 
-    print("Writing the Dose Map...")
+    logging.info("Writing the Dose Map...")
     # Write the dose array and output to a VTR file
     dose_array, x, y, z, plot_bounds = write_vtk_file(
         total_dose,
@@ -265,8 +271,7 @@ def process_sources(args: Namespace) -> None:
     dose_arrays = []
     # Check if a second point was provided - line source
     if args.x2 is not None and args.y2 is not None and args.z2 is not None:
-        # Line source
-        print("Line source(s) selected")
+        logging.info("Line source(s) selected")
 
         # Handle multiple sets of coordinates being provided (multiple line sources)
         for x1, y1, z1, x2, y2, z2 in zip(
@@ -299,8 +304,7 @@ def process_sources(args: Namespace) -> None:
                 z2,
             )
     else:
-        # Point source
-        print("Point source(s) selected")
+        logging.info("Point source(s) selected")
 
         # Handle multiple coordinates being provided
         for x1, y1, z1 in zip(args.x1, args.y1, args.z1):

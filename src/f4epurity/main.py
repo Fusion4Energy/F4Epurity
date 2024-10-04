@@ -26,10 +26,40 @@ from f4epurity.utilities import (
 )
 from f4epurity.parsing import parse_arguments, parse_isotopes_activities_file
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
+F4Epurity_TITLE = """
+  _____ _  _   _____                  _ _         
+ |  ___| || | | ____|_ __  _   _ _ __(_) |_ _   _ 
+ | |_  | || |_|  _| | '_ \| | | | '__| | __| | | |
+ |  _| |__   _| |___| |_) | |_| | |  | | |_| |_| |
+ |_|      |_| |_____| .__/ \__,_|_|  |_|\__|\__, |
+                    |_|                     |___/ 
+"""
+
+
+@staticmethod
+def _initialize_log(log: str | os.PathLike) -> None:
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    # Create a file handler for logging INFO level messages
+    file_handler = logging.FileHandler(log, encoding="utf-8")
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
+
+    # Create a console handler for logging INFO level messages
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.INFO)
+    console_handler.setFormatter(
+        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    )
+
+    # Add the handlers to the logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+
+    logging.info(F4Epurity_TITLE)
 
 
 # Main function
@@ -237,6 +267,8 @@ def process_sources(args: Namespace) -> None:
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     run_dir = f"{root}/F4Epurity_{timestamp}"
     os.makedirs(run_dir, exist_ok=True)
+
+    _initialize_log(f"{run_dir}/F4Epurity.log")
 
     # Write command line arguments to metadata.json
     with open(f"{run_dir}/metadata.json", "w", encoding="utf-8") as f:

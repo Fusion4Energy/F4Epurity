@@ -1,6 +1,7 @@
 import sys
 
 from importlib.resources import files, as_file
+import logging
 import numpy as np
 import pandas as pd
 import pyvista as pv
@@ -22,7 +23,7 @@ def read_maintenance_locations(workstation, location):
 
     # Check if the location exists in the DataFrame
     if location not in df["location"].values:
-        print(f"Error: No matching location found for {location}")
+        logging.critical(f"Error: No matching location found for {location}")
         sys.exit(1)
 
     if workstation.lower() == "all":
@@ -40,7 +41,7 @@ def read_maintenance_locations(workstation, location):
 
         # If workstation doesnt exist, return an error
         if df_filtered.empty:
-            print(
+            logging.critical(
                 f"Error: No matching workstation and location found for {workstation}, {location}"
             )
             sys.exit(1)
@@ -79,7 +80,7 @@ def get_dose_at_workstation(
         and min_y <= source_start[1] <= max_y
         and min_z <= source_start[2] <= max_z
     ):
-        print("The source is within the workstation volume")
+        logging.info("The source is within the workstation volume")
         return dose, source_start
 
     if is_line_source:
@@ -104,7 +105,7 @@ def get_dose_at_workstation(
                 or source_start[2] >= max_z >= source_end[2]
             )
         ):
-            print("The line source intersects the workstation volume")
+            logging.info("The line source intersects the workstation volume")
             return dose, source_start
         num_samples_volume = 10
 

@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import pandas as pd
 from jsonargparse import ArgumentParser, ActionConfigFile
@@ -198,7 +199,7 @@ def main():
         f.write(f"Density (rho): {density}\n")
         f.write(f"Total Transmitted Intensity: {total_intensity}\n")
 
-    print(f"Results saved to {run_dir}")
+    logging.info(f"Results saved to {run_dir}")
 
 
 if __name__ == "__main__":

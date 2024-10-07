@@ -4,6 +4,7 @@ from math import pi
 from pathlib import Path
 
 from importlib.resources import files, as_file
+import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pyevtk
@@ -152,7 +153,7 @@ def is_within_bounds(
     # Check if the bounds_list is empty
     if not bounds_list:
         # If the list is empty, the points are not within any of the files
-        print(
+        logging.warning(
             "WARNING: The point(s) of the source are not within the bounds of any of the available ITER room stl files."
         )
         return None

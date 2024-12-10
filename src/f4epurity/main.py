@@ -8,6 +8,7 @@ import os
 from importlib.resources import files, as_file
 import pandas as pd
 
+from f4epurity.psource import PointSource, GlobalSource
 from f4epurity.decay_chain_calc import calculate_total_activity
 from f4epurity.collapse import collapse_flux, extract_xs
 from f4epurity.dose import convert_to_dose, write_vtk_file, plot_slice
@@ -76,7 +77,7 @@ def calculate_dose_for_source(
     x2: np.ndarray = None,
     y2: np.ndarray = None,
     z2: np.ndarray = None,
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[float]]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[float], dict[str, float]]:
     """Calculate the dose for a given source
 
     Parameters
@@ -210,7 +211,7 @@ def calculate_dose_for_source(
         else:
             plt.savefig(f"{run_dir}/dose_{x1}_{y1}_{z1}.png")
 
-    return dose_array, x, y, z, total_dose
+    return dose_array, x, y, z, total_dose, activities
 
 
 def calculate_dose_at_workstations(
@@ -301,6 +302,7 @@ def process_sources(args: Namespace) -> None:
         dose_factors_df = pd.read_excel(fp)
 
     dose_arrays = []
+    sources = []
     # Check if a second point was provided - line source
     if args.x2 is not None and args.y2 is not None and args.z2 is not None:
         logging.info("Line source(s) selected")
@@ -309,7 +311,7 @@ def process_sources(args: Namespace) -> None:
         for x1, y1, z1, x2, y2, z2 in zip(
             args.x1, args.y1, args.z1, args.x2, args.y2, args.z2
         ):
-            dose_array, x, y, z, dose = calculate_dose_for_source(
+            dose_array, x, y, z, dose, activities = calculate_dose_for_source(
                 args,
                 x1,
                 y1,
@@ -340,7 +342,7 @@ def process_sources(args: Namespace) -> None:
 
         # Handle multiple coordinates being provided
         for x1, y1, z1 in zip(args.x1, args.y1, args.z1):
-            dose_array, x, y, z, dose = calculate_dose_for_source(
+            dose_array, x, y, z, dose, activities = calculate_dose_for_source(
                 args,
                 x1,
                 y1,
@@ -352,7 +354,14 @@ def process_sources(args: Namespace) -> None:
                 dose_factors_df,
             )
             dose_arrays.append(dose_array)
+            if args.dump_source:
+                sources.append(PointSource(activities, [x1, y1, z1], mass=args.m))
             calculate_dose_at_workstations(args, dose, x1, y1, z1, run_dir)
+    
+    if args.dump_source:
+        global_source = GlobalSource(sources)
+        global_source.to_sdef(f"{run_dir}/source.sdef") # TODO
+
 
     # If more than one dose array is present, sum the dose arrays (multiple sources)
     if len(dose_arrays) > 1:

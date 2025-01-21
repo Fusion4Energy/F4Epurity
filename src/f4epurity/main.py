@@ -1,30 +1,32 @@
-import logging
-from jsonargparse import Namespace
 import csv
 import datetime
 import json
-import numpy as np
+import logging
 import os
-from importlib.resources import files, as_file
-import pandas as pd
+from importlib.resources import as_file, files
 
-from f4epurity.decay_chain_calc import calculate_total_activity
+import numpy as np
+import pandas as pd
+from jsonargparse import Namespace
+
 from f4epurity.collapse import collapse_flux, extract_xs
-from f4epurity.dose import convert_to_dose, write_vtk_file, plot_slice
+from f4epurity.decay_chain_calc import calculate_total_activity
+from f4epurity.dose import convert_to_dose, plot_slice, write_vtk_file
 from f4epurity.maintenance import (
     dose_within_workstation,
     get_dose_at_workstation,
     read_maintenance_locations,
 )
+from f4epurity.mcnp_source_calc import mcnp_main
+from f4epurity.parsing import parse_arguments, parse_isotopes_activities_file
 from f4epurity.reaction_rate import calculate_reaction_rate
 from f4epurity.utilities import (
     calculate_number_of_atoms,
     get_isotopes,
-    sum_vtr_files,
-    normalise_nuclide_name,
     get_reactions_from_file,
+    normalise_nuclide_name,
+    sum_vtr_files,
 )
-from f4epurity.parsing import parse_arguments, parse_isotopes_activities_file
 
 F4Epurity_TITLE = """
   _____ _  _   _____                  _ _         
@@ -155,13 +157,28 @@ def calculate_dose_for_source(
         activities = calculate_total_activity(
             reaction_rates, args.irrad_scenario, args.decay_time, decay_data
         )
+        print("Activities:")
+        print(activities)
+        # Collect all activities into a single string with coordinates
+        coordinates_str = f"Coordinates: x1={x1}, y1={y1}, z1={z1}"
+        if x2 is not None and y2 is not None and z2 is not None:
+            coordinates_str += f", x2={x2}, y2={y2}, z2={z2}"
+        all_activities_str = (
+            coordinates_str
+            + "\n"
+            + "\n".join(
+                [f"{nuclide}: {activity}" for nuclide, activity in activities.items()]
+            )
+        )
+    if args.mcnp:
+        mcnp_main(all_activities_str)
+
     # Initialize a list to store the total dose for each element
     total_dose = None
 
     logging.info("Calculating the Dose...")
     # Determine the Dose for each nuclide
     for nuclide, nuclide_activity in activities.items():
-
         # Convert to format in dose conversion spreadsheet
         nuclide = normalise_nuclide_name(nuclide)
 
@@ -381,6 +398,31 @@ def process_sources(args: Namespace) -> None:
                     )
                     max_dose_str = "{:.3e}".format(max_dose)
                     writer.writerow([workstation, max_dose_str])
+
+    if args.mcnp:
+        check_and_split_lines("mcnp_source.txt", 100)
+
+
+def check_and_split_lines(file_name="mcnp_source.txt", limit=100):
+    file_path = os.path.join(os.getcwd(), file_name)
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+
+    new_lines = []
+    for line in lines:
+        while len(line) > limit:
+            # Find the last space within the limit
+            split_pos = line.rfind(" ", 0, limit)
+            if split_pos == -1:
+                split_pos = limit
+            if split_pos == 0:
+                break
+            new_lines.append(line[:split_pos] + " &\n")
+            line = line[split_pos:].lstrip()
+        new_lines.append(line)
+
+    with open(file_path, "w") as file:
+        file.writelines(new_lines)
 
 
 def main(args_list: list[str] | None = None):

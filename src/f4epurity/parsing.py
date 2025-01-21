@@ -1,9 +1,9 @@
+import os
 from typing import List, Optional
 
-import os
 import numpy as np
-from jsonargparse import ArgumentParser, Namespace, ActionConfigFile
 import pandas as pd
+from jsonargparse import ActionConfigFile, ArgumentParser, Namespace
 
 
 def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
@@ -138,7 +138,12 @@ def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
         type=str,
         help="Path to STL files of ITER rooms that can be used for plotting",
     )
-
+    # Add the optional "mcnp" argument
+    parser.add_argument(
+        "--mcnp",
+        action="store_true",
+        help="Optional 'mcnp' argument to generate mcnp_source.txt",
+    )
     # Parse the arguments
     args = parser.parse_args(args_list)
 

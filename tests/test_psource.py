@@ -10,6 +10,12 @@ from f4epurity.mcnp_source_calc import (
 global_counter = 0
 
 
+import numpy as np
+import pytest
+
+from f4epurity.psource import GlobalSource, PointSource
+
+
 class TestPointSource:
     def test_actigamma_import(self):
         try:

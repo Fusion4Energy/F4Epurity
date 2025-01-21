@@ -41,7 +41,7 @@ def convert_to_actigamma_format(data):
     return formatted_data
 
 
-def mcnp_main(all_activities_str: str):
+def dump_mcnp_source(activities: str, x1, y1, z1, run_dir):
     global mcnp_main_call_count
 
     # Parse all_activities_str to extract coordinates and activities for multiple points

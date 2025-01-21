@@ -17,9 +17,9 @@ from f4epurity.maintenance import (
     get_dose_at_workstation,
     read_maintenance_locations,
 )
-from f4epurity.mcnp_source_calc import mcnp_main
+from f4epurity.mcnp_source_calc import dump_mcnp_source
 from f4epurity.parsing import parse_arguments, parse_isotopes_activities_file
-from f4epurity.psource import GlobalSource, PointSource
+from f4epurity.psource import GlobalPointSource, PointSource
 from f4epurity.reaction_rate import calculate_reaction_rate
 from f4epurity.utilities import (
     calculate_number_of_atoms,
@@ -160,21 +160,6 @@ def calculate_dose_for_source(
         activities = calculate_total_activity(
             reaction_rates, args.irrad_scenario, args.decay_time, decay_data
         )
-        print("Activities:")
-        print(activities)
-        # Collect all activities into a single string with coordinates
-        coordinates_str = f"Coordinates: x1={x1}, y1={y1}, z1={z1}"
-        if x2 is not None and y2 is not None and z2 is not None:
-            coordinates_str += f", x2={x2}, y2={y2}, z2={z2}"
-        all_activities_str = (
-            coordinates_str
-            + "\n"
-            + "\n".join(
-                [f"{nuclide}: {activity}" for nuclide, activity in activities.items()]
-            )
-        )
-    if args.mcnp:
-        mcnp_main(all_activities_str)
 
     # Initialize a list to store the total dose for each element
     total_dose = None

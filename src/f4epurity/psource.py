@@ -9,6 +9,7 @@ import numpy as np
 DB = ag.Decay2012Database()
 GRID = ag.EnergyGrid(bounds=ag.linspace(0, 4e6, 10000))  # TODO
 LC = ag.MultiTypeLineAggregator(DB, GRID)
+CHAR_LIMIT = 120
 
 
 class GlobalPointSource:
@@ -16,14 +17,68 @@ class GlobalPointSource:
         self.sources = sources
 
     def to_sdef(self, outfile: str | Path) -> None:
-        sdef_line = "sdef\n"
-        si1 = "S11 L "
+        # compute total mass
+        t_mass = 0
+        for psource in self.sources:
+            t_mass += psource.mass
+
+        sdef_line = "sdef PAR=2 POS=d1 ERG FPOS d2\n"
+        si1 = "S1 L "
         sp1 = "SP1 "
-        ds2 = "DS2 "
+        ds2 = "DS2 S "
+        intial_ds = 3
         lines_distributions = []
-        for source in self.sources:
-            si1 = si1 + f" {source.coord[0]} {source.coord[0]} {source.coord[0]}"
-            sp1 = sp1 + f"{source.mass} 0.0 0.0"
+        start_SI = "SI{} L "
+        start_SP = "SP{} "
+        for idx, psource in enumerate(self.sources):
+            # Adjounr global distributions
+            si1 = si1 + f" {psource.coord[0]} {psource.coord[1]} {psource.coord[2]} "
+            sp1 = sp1 + f"{psource.mass/t_mass:.3f} "
+            p_source_idx = intial_ds + idx
+            ds2 = ds2 + f" {p_source_idx} "
+
+            # add specific point source distribution
+            X, Y = psource._compute_lines()
+            SI_line = start_SI.format(p_source_idx)
+            SP_line = start_SP.format(p_source_idx)
+            SI_line = insert_wrapped_values(SI_line, X, CHAR_LIMIT)
+            SP_line = insert_wrapped_values(SP_line, Y, CHAR_LIMIT)
+            lines_distributions.append(SI_line)
+            lines_distributions.append(SP_line)
+
+        with open(outfile, "w") as f:
+            f.write(sdef_line)
+            f.write(si1 + "\n")
+            f.write(sp1 + "\n")
+            f.write(ds2 + "\n")
+            for line in lines_distributions:
+                f.write(line + "\n")
+
+
+def insert_wrapped_values(
+    initial_str: str, values: list | np.ndarray, limit: int
+) -> str:
+    """
+    Insert values into a string with a limit of characters per line
+
+    Parameters
+    ----------
+    initial_str : str
+        initial string
+    values : list | np.ndarray
+        values to be inserted
+    limit : int
+        character limit per line
+    """
+    new_str = initial_str + "\n      "
+    line = 0
+    for value in values:
+        value = f"{value:.2e}"
+        if len(new_str.split("\n")[-1]) + len(value) > limit:
+            new_str += "\n      "
+            line += 1
+        new_str += f" {value}"
+    return new_str
 
 
 class SingleSource(ABC):
@@ -43,7 +98,10 @@ class SingleSource(ABC):
         inventory = self._compute_inventory()
         hist, bin_edges = LC(inventory)
         X, Y = ag.getplotvalues(bin_edges, hist)
-        return X, Y
+        # Filter out zero count values
+        X_filtered = [x for x, y in zip(X, Y) if y != 0]
+        Y_filtered = [y for y in Y if y != 0]
+        return X_filtered, Y_filtered
 
     @abstractmethod
     def _compute_inventory(self) -> ag.UnstablesInventory:

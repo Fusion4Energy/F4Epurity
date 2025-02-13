@@ -80,7 +80,12 @@ def calculate_dose_for_source(
     y2: np.ndarray = None,
     z2: np.ndarray = None,
 ) -> tuple[
-    np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[float], dict[str, float]
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    list[float],
+    dict[str, list[np.ndarray]],
 ]:
     """Calculate the dose for a given source
 
@@ -160,7 +165,25 @@ def calculate_dose_for_source(
         activities = calculate_total_activity(
             reaction_rates, args.irrad_scenario, args.decay_time, decay_data
         )
-
+        # print("Activities:")
+        # print(activities)
+        # # Collect all activities into a single string with coordinates
+        # coordinates_str = f"Coordinates: x1={x1}, y1={y1}, z1={z1}"
+        # if x2 is not None and y2 is not None and z2 is not None:
+        #     coordinates_str += f", x2={x2}, y2={y2}, z2={z2}"
+        # all_activities_str = (
+        #     coordinates_str
+        #     + "\n"
+        #     + "\n".join(
+        #         [f"{nuclide}: {activity}" for nuclide, activity in activities.items()]
+        #     )
+        # )
+        # if args.mcnp:
+        #     mcnp_main(all_activities_str)
+        # if args.dump_source:
+        #     PointSource(activities, [x1, y1, z1], mass=args.m).to_mcnp(
+        #         "mcnp_source.txt"
+        #     )
     # Initialize a list to store the total dose for each element
     total_dose = None
 
@@ -363,7 +386,7 @@ def process_sources(args: Namespace) -> None:
             calculate_dose_at_workstations(args, dose, x1, y1, z1, run_dir)
 
     if args.dump_source:
-        global_source = GlobalSource(sources)
+        global_source = GlobalPointSource(sources)
         global_source.to_sdef(f"{run_dir}/source.sdef")  # TODO
 
     # If more than one dose array is present, sum the dose arrays (multiple sources)
@@ -394,8 +417,8 @@ def process_sources(args: Namespace) -> None:
                     max_dose_str = "{:.3e}".format(max_dose)
                     writer.writerow([workstation, max_dose_str])
 
-    if args.mcnp:
-        check_and_split_lines("mcnp_source.txt", 100)
+    # if args.mcnp:
+    #     check_and_split_lines("mcnp_source.txt", 100)
 
 
 def check_and_split_lines(file_name="mcnp_source.txt", limit=100):

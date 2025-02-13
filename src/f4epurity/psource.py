@@ -17,13 +17,26 @@ class GlobalPointSource:
         self.sources = sources
 
     def to_sdef(self, outfile: str | Path) -> None:
+        """
+        Generate an MCNP SDEF (source definition) card for the global point sources and
+        write it to a file named mcnp_source.txt.
+
+        Parameters
+        ----------
+        outfile : str | Path
+            The path to the output file where the SDEF card will be written.
+
+        Returns
+        -------
+        None
+        """
         # compute total mass
         t_mass = 0
         for psource in self.sources:
             t_mass += psource.mass
 
         sdef_line = "sdef PAR=2 POS=d1 ERG FPOS d2\n"
-        si1 = "S1 L "
+        si1 = "SI1 L "
         sp1 = "SP1 "
         ds2 = "DS2 S "
         intial_ds = 3
@@ -69,6 +82,10 @@ def insert_wrapped_values(
         values to be inserted
     limit : int
         character limit per line
+    Returns
+    -------
+    str
+        The resulting string with values indented according to the character limit.
     """
     new_str = initial_str + "\n      "
     line = 0
@@ -82,6 +99,24 @@ def insert_wrapped_values(
 
 
 class SingleSource(ABC):
+    """
+    Generate a single source definition for MCNP simulation.
+
+    Parameters
+    ----------
+    activities : dict
+        A dictionary where keys are nuclide names and values are their activities.
+    coord : list[float]
+        List of coordinates [x1, y1, z1] for point and also [x2, y2, z2] for line source
+    mass : float
+        The mass of the source.
+
+    Returns
+    -------
+    str
+        A string representing the MCNP source definition.
+    """
+
     def __init__(
         self,
         activities: dict[str, list[np.ndarray]],
@@ -109,14 +144,34 @@ class SingleSource(ABC):
 
 
 class PointSource(SingleSource):
+    """
+    A class representing a point source
+
+    Parameters
+    ----------
+    SingleSource : _type_
+        Compute the inventory of unstable nuclides for the point source.
+    """
+
     def _compute_inventory(self) -> ag.UnstablesInventory:
         data = []
         for key, value in self.activities.items():
-            act = value[0][0]
+            act = float(value[0][0])
+            if act == 0:
+                continue
             data.append((DB.getzai(key), act))
         inventory = ag.UnstablesInventory(data)
         return inventory
 
 
 class LineSource(SingleSource):
+    """
+    A class representing a line source
+
+    Parameters
+    ----------
+    SingleSource : _type_
+       Compute the inventory of unstable nuclides for the line source.
+    """
+
     pass

@@ -140,9 +140,9 @@ def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
     )
     # Add the optional "mcnp" argument
     parser.add_argument(
-        "--mcnp",
+        "--dump_source",
         action="store_true",
-        help="Optional 'mcnp' argument to generate mcnp_source.txt",
+        help="Optional 'dump_source' argument to generate mcnp_source.txt",
     )
     # Parse the arguments
     args = parser.parse_args(args_list)

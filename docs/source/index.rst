@@ -6,11 +6,25 @@
 Welcome to F4Epurity's documentation!
 =====================================
 
+F4Epurity is a python-based tool that can be used to approximate the change 
+in activity and dose resulting from a deviation in chemical composition of a 
+material under irradiation.
+
+Brought to you by Fusion For Energy (F4E) Analyses & Codes team and UK Atomic Energy Authority (UKAEA).
+
+Source code is hosted on GitHub https://github.com/Fusion4Energy/F4Epurity
+
+.. include:: introduction.rst
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
-
+   installation
+   usage
+   examples
+   input_parameters
+   troubleshooting
 
 Indices and tables
 ==================

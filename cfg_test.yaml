@@ -1,6 +1,0 @@
-element: Ta
-delta_impurity: 0.01
-input_flux: ./11-L3-03N.vtu
-irrad_scenario: SA2
-sources_csv: ./11-L3-03N_valves_clipped.csv
-decay_time: 1e6

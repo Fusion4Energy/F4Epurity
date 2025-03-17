@@ -401,28 +401,6 @@ def process_sources(args: Namespace) -> None:
                     writer.writerow([workstation, max_dose_str])
 
 
-def check_and_split_lines(file_name="mcnp_source.txt", limit=100):
-    file_path = os.path.join(os.getcwd(), file_name)
-    with open(file_path, "r") as file:
-        lines = file.readlines()
-
-    new_lines = []
-    for line in lines:
-        while len(line) > limit:
-            # Find the last space within the limit
-            split_pos = line.rfind(" ", 0, limit)
-            if split_pos == -1:
-                split_pos = limit
-            if split_pos == 0:
-                break
-            new_lines.append(line[:split_pos] + " &\n")
-            line = line[split_pos:].lstrip()
-        new_lines.append(line)
-
-    with open(file_path, "w") as file:
-        file.writelines(new_lines)
-
-
 def main(args_list: list[str] | None = None):
     args = parse_arguments(args_list)
     process_sources(args)

@@ -142,7 +142,7 @@ def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
     parser.add_argument(
         "--dump_source",
         action="store_true",
-        help="Optional 'dump_source' argument to generate mcnp_source.txt",
+        help="Optional 'dump_source' argument to generate source.sdef.file for MCNP",
     )
     # Parse the arguments
     args = parser.parse_args(args_list)

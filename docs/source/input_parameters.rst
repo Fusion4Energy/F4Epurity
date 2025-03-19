@@ -1,4 +1,5 @@
-## Extended description of admissible options
+## Input parameters
+
 This is a complete list of the available options for the tool and their description.
 
 ### Mandatory parameters

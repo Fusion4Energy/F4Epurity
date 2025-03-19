@@ -1,4 +1,6 @@
-## Troubleshooting
+############### 
+Troubleshooting
+###############
 
 Many issues encountered during installation can be resolved by creating a new virtual environment and reinstalling.
 

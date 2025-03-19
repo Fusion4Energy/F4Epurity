@@ -3,7 +3,7 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-from f4epurity import __version__
+# from f4epurity import __version__
 import sys
 import os
 
@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 project = 'F4Epurity'
 copyright = '2025, UKAEA - F4E'
 author = 'UKAEA - F4E'
-release = __version__
+release = "v1.0.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

@@ -1,8 +1,11 @@
-## Input parameters
+################ 
+Input parameters
+################
 
 This is a complete list of the available options for the tool and their description.
 
-### Mandatory parameters
+Mandatory parameters
+====================
 
 - ``--element``: the element name of the impurity to be considered by the tool (e.g. "Ta").
 - ``--delta_impurity``: the percentage increase (or decrease) of impurity to be considered in the different components (sources). As an example, if the impurity in the component is increased from 0.5% to 0.6% in mass, ``delta_impurity=0.1``.
@@ -11,7 +14,8 @@ This is a complete list of the available options for the tool and their descript
 - ``--decay_time``: decay time in seconds after which the dose deviation needs to be computed.
 - ``--x1``, ``--y1``, ``--z1``: x, y, z coordinate(s) of the sources.
 
-### Optional parameters
+Optional parameters
+===================
 
 - `--cfg`: path to a configuration file (json or yaml) where all options can be specified instead of providing them from command line.
 - ``--m``: mass(es) in grams of the component containing the impurity.

@@ -1,4 +1,6 @@
-## Introduction
+############
+Introduction
+############
 
 F4Epurity is a python-based tool that can be used to approximate the change in activity and dose resulting from a deviation in chemical composition of a material under irradiation.
 

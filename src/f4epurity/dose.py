@@ -246,7 +246,6 @@ def write_vtk_file(
                     # Avoid division by zero
                     if distance == 0:
                         dose_array[i, j, k] = dose[0]
-                        print("Dose at source point is:", dose[0])
                     else:
                         dose_array[i, j, k] = dose[0] / (4 * pi * distance**2)
     # Get the indices of the max value
@@ -256,9 +255,6 @@ def write_vtk_file(
     x_max = x[indices[0]]
     y_max = y[indices[1]]
     z_max = z[indices[2]]
-    # print(
-    #     f"Max dose value: {dose_array[indices]} at coordinates: ({x_max}, {y_max}, {z_max})"
-    # )
     # Create the output directory if it doesn't exist
     os.makedirs("output", exist_ok=True)
 

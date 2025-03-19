@@ -360,7 +360,7 @@ def process_sources(args: Namespace) -> None:
                 dose_factors_df,
             )
             dose_arrays.append(dose_array)
-            if args.dump_source:
+            if args.write_sdef:
                 if args.m:
                     mass = args.m[i]
                 else:
@@ -368,9 +368,9 @@ def process_sources(args: Namespace) -> None:
                 sources.append(PointSource(activities, [x1, y1, z1], mass=mass))
             calculate_dose_at_workstations(args, dose, x1, y1, z1, run_dir)
 
-    if args.dump_source:
+    if args.write_sdef:
         global_source = GlobalPointSource(sources)
-        global_source.to_sdef(f"{run_dir}/source.sdef")  # TODO
+        global_source.to_sdef(f"{run_dir}/source.sdef")
 
     # If more than one dose array is present, sum the dose arrays (multiple sources)
     if len(dose_arrays) > 1:

@@ -22,8 +22,8 @@ Source code is hosted on GitHub https://github.com/Fusion4Energy/F4Epurity
 
    installation
    usage
-   examples
    input_parameters
+   examples
    troubleshooting
    license
 

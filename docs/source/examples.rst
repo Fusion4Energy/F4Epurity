@@ -83,6 +83,7 @@ Finally, if the study requires assessing a large number of source points (or lin
     -834,1994,1230,-834,1994,1231
 
 Clearly, if point sources are to be considered, [x2, y2, z2] can be omitted. The code will throw errors if:
+
 - The column names differ from what is reported here.
 - Not all necessary columns are present (either 3 or 6).
 - The ``--sources_csv`` and ``--x1 --y2 ...`` options are provided at the same time.

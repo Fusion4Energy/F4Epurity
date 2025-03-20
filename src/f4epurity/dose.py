@@ -215,12 +215,22 @@ def write_vtk_file(
 
     # Check if dose is a list with more than one value (line source case)
     if hasattr(dose, "__iter__") and len(dose) > 1:
+        # Iterate over each point in the grid
+        for i in range(len(x) - 1):
+            for j in range(len(y) - 1):
+                for k in range(len(z) - 1):
+                    # Calculate the dose at the point from the line source
+                    dose_point = dose_from_line_source(
+                        dose, x1, y1, z1, x2, y2, z2, x[i], y[j], z[k]
+                    )
+                    dose_array[i, j, k] = dose_point
+
+    else:  # Point source case
         # get midpoints
         x_mid = (x[1:] + x[:-1]) / 2
         y_mid = (y[1:] + y[:-1]) / 2
         z_mid = (z[1:] + z[:-1]) / 2
-        # Iterate over each point in the grid
-        # Create a 3D numpy array filled with the dose values based on 1/r^2 ( on middle point source model)
+        # Create a 3D numpy array filled with the dose values based on 1/r^2 (on middle point source model)
         for i in range(len(x_mid)):
             for j in range(len(y_mid)):
                 for k in range(len(z_mid)):
@@ -229,16 +239,12 @@ def write_vtk_file(
                         + (y_mid[j] - y1) ** 2
                         + (z_mid[k] - z1) ** 2
                     )
-                    # Calculate the dose at the point from the line source
-                    dose_point = dose_from_line_source(
-                        dose, x1, y1, z1, x2, y2, z2, x_mid[i], y_mid[j], z_mid[k]
-                    )
-                    dose_array[i, j, k] = dose_point
                     # Avoid division by zero
                     if distance == 0:
                         dose_array[i, j, k] = dose[0] / (4 * pi)
                     else:
                         dose_array[i, j, k] = dose[0] / (4 * pi * distance**2)
+
     # Get the indices of the max value
     indices = np.unravel_index(np.argmax(dose_array, axis=None), dose_array.shape)
 

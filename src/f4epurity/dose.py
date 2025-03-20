@@ -224,28 +224,30 @@ def write_vtk_file(
                         dose, x1, y1, z1, x2, y2, z2, x[i], y[j], z[k]
                     )
                     dose_array[i, j, k] = dose_point
-
-    # Create a 3D numpy array filled with the dose values based on 1/r^2 ( original bottom-left point source model)
-    else:
-        for i in range(len(x) - 1):
-            for j in range(len(y) - 1):
-                for k in range(len(z) - 1):
-                    distance = np.sqrt(
-                        (x[i] - x1) ** 2 + (y[j] - y1) ** 2 + (z[k] - z1) ** 2
-                    )
-                    ## get midpoints
-                    # x_mid = (x[1:] + x[:-1]) / 2
-                    # y_mid = (y[1:] + y[:-1]) / 2
-                    # z_mid = (z[1:] + z[:-1]) / 2
-                    # for i in range(len(x_mid)):
-                    #     for j in range(len(y_mid)):
-                    #         for k in range(len(z_mid)):
-                    #             distance = np.sqrt(
-                    #                 (x_mid[i] - x1) ** 2 + (y_mid[j] - y1) ** 2 + (z_mid[k] - z1) ** 2
-                    #             )
+                    # # to create a 3D numpy array filled with the dose values based on 1/r^2 (original bottom-left point source model)
+                    # else:
+                    #     for i in range(len(x) - 1):
+                    #         for j in range(len(y) - 1):
+                    #             for k in range(len(z) - 1):
+                    #                 distance = np.sqrt(
+                    #                     (x[i] - x1) ** 2 + (y[j] - y1) ** 2 + (z[k] - z1) ** 2
+                    #                 )
+                    # get midpoints
+                    x_mid = (x[1:] + x[:-1]) / 2
+                    y_mid = (y[1:] + y[:-1]) / 2
+                    z_mid = (z[1:] + z[:-1]) / 2
+                    # Create a 3D numpy array filled with the dose values based on 1/r^2 ( on middle point source model)
+                    for i in range(len(x_mid)):
+                        for j in range(len(y_mid)):
+                            for k in range(len(z_mid)):
+                                distance = np.sqrt(
+                                    (x_mid[i] - x1) ** 2
+                                    + (y_mid[j] - y1) ** 2
+                                    + (z_mid[k] - z1) ** 2
+                                )
                     # Avoid division by zero
                     if distance == 0:
-                        dose_array[i, j, k] = dose[0]
+                        dose_array[i, j, k] = dose[0] / (4 * pi)
                     else:
                         dose_array[i, j, k] = dose[0] / (4 * pi * distance**2)
     # Get the indices of the max value

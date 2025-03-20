@@ -1,0 +1,7 @@
+# DOC reqs
+sphinx
+esbonio
+myst-parser
+pydata-sphinx-theme
+pyyaml
+pygments

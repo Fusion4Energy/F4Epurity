@@ -232,6 +232,7 @@ def write_vtk_file(
                     #                 distance = np.sqrt(
                     #                     (x[i] - x1) ** 2 + (y[j] - y1) ** 2 + (z[k] - z1) ** 2
                     #                 )
+
                     # get midpoints
                     x_mid = (x[1:] + x[:-1]) / 2
                     y_mid = (y[1:] + y[:-1]) / 2

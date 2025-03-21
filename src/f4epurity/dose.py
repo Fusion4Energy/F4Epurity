@@ -1,10 +1,10 @@
+import logging
 import os
 import sys
+from importlib.resources import as_file, files
 from math import pi
 from pathlib import Path
 
-from importlib.resources import files, as_file
-import logging
 import matplotlib.pyplot as plt
 import numpy as np
 import pyevtk
@@ -102,7 +102,6 @@ def dose_from_line_source(dose, x1, y1, z1, x2, y2, z2, x, y, z):
 def is_within_bounds(
     x1, y1, z1, flux_grid_file, stl_files_path=None, x2=None, y2=None, z2=None
 ):
-
     # If a path to the STL files is provided, use it
     if stl_files_path is not None:
         folder_path = Path(stl_files_path)
@@ -178,7 +177,6 @@ def write_vtk_file(
     z2=None,
     output_all_vtr=False,
 ):
-
     # Get the bounds in which to make the plot
     plot_bounds = is_within_bounds(
         x1, y1, z1, flux_grid_file, stl_files_path, x2, y2, z2
@@ -227,17 +225,23 @@ def write_vtk_file(
                     )
                     dose_array[i, j, k] = dose_point
 
-    # Create a 3D numpy array filled with the dose values based on 1/r^2
-    else:
-        for i in range(len(x) - 1):
-            for j in range(len(y) - 1):
-                for k in range(len(z) - 1):
+    else:  # Point source case
+        # get midpoints
+        x_mid = (x[1:] + x[:-1]) / 2
+        y_mid = (y[1:] + y[:-1]) / 2
+        z_mid = (z[1:] + z[:-1]) / 2
+        # Create a 3D numpy array filled with the dose values based on 1/r^2 (on middle point source model)
+        for i in range(len(x_mid)):
+            for j in range(len(y_mid)):
+                for k in range(len(z_mid)):
                     distance = np.sqrt(
-                        (x[i] - x1) ** 2 + (y[j] - y1) ** 2 + (z[k] - z1) ** 2
+                        (x_mid[i] - x1) ** 2
+                        + (y_mid[j] - y1) ** 2
+                        + (z_mid[k] - z1) ** 2
                     )
                     # Avoid division by zero
                     if distance == 0:
-                        dose_array[i, j, k] = dose[0]
+                        dose_array[i, j, k] = dose[0] / (4 * pi)
                     else:
                         dose_array[i, j, k] = dose[0] / (4 * pi * distance**2)
 
@@ -248,7 +252,6 @@ def write_vtk_file(
     x_max = x[indices[0]]
     y_max = y[indices[1]]
     z_max = z[indices[2]]
-
     # Create the output directory if it doesn't exist
     os.makedirs("output", exist_ok=True)
 
@@ -265,7 +268,6 @@ def write_vtk_file(
 
 
 def plot_slice(dose_array, x, y, z, slice_axis, slice_location, plot_bounds):
-
     # Map axis names to indices
     axis_dict = {"x": 0, "y": 1, "z": 2}
 
@@ -352,8 +354,9 @@ def plot_slice(dose_array, x, y, z, slice_axis, slice_location, plot_bounds):
         # Loop over each solid in the stl file and plot the slice
         for solid in stl.solids:
             slice = solid.slice(plane=slice_axis, intercept=slice_location)
-            pairs = getattr(slice, axis_pairs[slice_axis][0] + "_pairs"), getattr(
-                slice, axis_pairs[slice_axis][1] + "_pairs"
+            pairs = (
+                getattr(slice, axis_pairs[slice_axis][0] + "_pairs"),
+                getattr(slice, axis_pairs[slice_axis][1] + "_pairs"),
             )
             for pair in zip(*pairs):
                 ax.plot(*pair, color="black", linewidth=1)

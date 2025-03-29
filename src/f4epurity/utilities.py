@@ -2,6 +2,7 @@ import os
 import re
 import sys
 
+import logging
 import numpy as np
 import pandas as pd
 import pyevtk
@@ -58,7 +59,7 @@ def get_molar_mass(isotope: str, nist_df: pd.DataFrame) -> float:
 
     # If no matching row is found, return an error
     if df_filtered.empty:
-        print(
+        logging.critical(
             f"Error: No matching atomic symbol and mass number found for {atomic_symbol}, {mass_number}"
         )
         sys.exit(1)

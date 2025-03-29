@@ -1,6 +1,6 @@
+import math
 from copy import deepcopy
 
-import math
 import numpy as np
 
 from f4epurity.utilities import add_user_irrad_scenario, convert_names
@@ -41,6 +41,10 @@ IRRAD_SCENARIOS = {
         + [3920, 400] * 17
         + [3920, 400] * 3,
         "fluxes": [0.00536, 0.0412, 0, 0.083] + [0, 1] * 17 + [0, 1.4] * 3,
+    },
+    "Y1": {
+        "times": [365 * DAY_TO_SEC],
+        "fluxes": [1],
     },
 }
 
@@ -105,7 +109,6 @@ def irradiate(
         decay_data_dic[nuclide]["lambda"][1:],
         decay_data_dic[nuclide]["Decay_daughter_names"][1:],
     ):
-
         # Tool cannot handle fission or very long lived >1e19 s half-lives, therefore treat these as stable.
         if decay_type == "f" or ("BR" in decay_data_dic[nuclide] and lambd < 1e-20):
             continue
@@ -168,14 +171,12 @@ def get_nuclides(scenario: dict, parent: str, decay_data_dic: dict, atoms: int) 
 
     # Loop over each time step in the irradiation and decay
     for time, flux in zip(scenario["times"], scenario["fluxes"]):
-
         # initialise a dictionary of nuclides which will occur
         decay_data_dic[parent]["lambda"] = [flux * x for x in initial_lambda]
         sum_nuclides = {}
 
         # Loop over each of the nuclides that is present at the start of the pulse
         for nuclide in init_nuclides:
-
             # Set the first lambda in the decay chain to the lambda of this nuclide
             lambda_temp[0] = decay_data_dic[nuclide]["lambda"][0]
 
@@ -268,7 +269,7 @@ def create_dictionary(decay_data: dict, parent: str, daughters: list) -> dict:
 
 def calculate_total_activity(
     nuclide_dict: dict, irrad_scenario: dict, decay_time: int, decay_data: dict
-) -> dict:
+) -> dict[str, list[np.ndarray]]:
     """Function to calculate the total activity of a given nuclide dictionary
 
     Parameters
@@ -284,7 +285,7 @@ def calculate_total_activity(
 
     Returns
     -------
-    dict
+    dict[str, list[np.ndarray]]
         dictionary containing the total activity for each nuclide in the nuclide dictionary
     """
 

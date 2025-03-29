@@ -1,3 +1,4 @@
+import logging
 import numpy as np
 import pyvista as pv
 import sys
@@ -186,7 +187,9 @@ def perform_collapse(xs_values: np.array, flux: np.array) -> np.array:
 
     # Check the flux spectrum is non-zero
     if total_flux == 0:
-        print("Warning: The flux is zero in all energy bins at the selected location.")
+        logging.warning(
+            "Warning: The flux is zero in all energy bins at the selected location."
+        )
 
     # Calculate the effective cross section
     sigma_eff = np.sum(xs_group * flux) / total_flux

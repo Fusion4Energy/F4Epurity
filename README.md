@@ -1,4 +1,5 @@
 [![Testing](https://github.com/Fusion4Energy/F4Epurity/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Fusion4Energy/F4Epurity/actions/workflows/ci.yml)
+[![PyPI version](https://badge.fury.io/py/f4epurity.svg)](https://pypi.org/project/f4epurity/)
 # F4Epurity
 
 ## Description

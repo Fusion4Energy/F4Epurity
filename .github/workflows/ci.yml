@@ -43,3 +43,12 @@ jobs:
           .\env\Scripts\activate
           pip install .[tests]
           pytest
+
+      - name: Upload coverage to Codecov
+        # do it only once for python 3.10
+        if: matrix.python-version == '3.11' && matrix.os == 'ubuntu-latest'
+        uses: codecov/codecov-action@v4
+        with:
+          verbose: true
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

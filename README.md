@@ -7,7 +7,7 @@ F4Epurity is a python-based tool that can be used to approximate the change in a
 
 The tool works for a point or line deviation and outputs a 3D map of the deviation in dose in *vtr* format. This dose field assumes unshielded and unscattered conditions.  
 
-Instruction on installation and usage of the tool can be found at [INSERT LINK]
+Instruction on installation and usage of the tool can be found in the [code documentation](https://f4epurity.readthedocs.io/en/stable/index.html)
 
 ## Reporting Bugs
 

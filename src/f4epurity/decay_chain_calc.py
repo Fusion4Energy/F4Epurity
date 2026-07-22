@@ -12,7 +12,7 @@ YEAR_TO_SEC = 365.25 * DAY_TO_SEC
 
 # Define the known irradiation scenarios
 # (times is a list of length of irradiation periods, fluxes is a list of the relative (to the nominal source strength) source strength for the given irradiation period)
-# old SA2 and generic 1 year of irradiation scenarios included for testing purposes.
+# old SA2 and generic test and 1 year of irradiation scenarios included for testing purposes.
 # REF for DT1 and DT2: CXM7AR v1.3 Safety irradiation scenario
 IRRAD_SCENARIOS = {
     "DT1": {
@@ -73,6 +73,24 @@ IRRAD_SCENARIOS = {
     "Y1": {
         "times": [365 * DAY_TO_SEC],
         "fluxes": [1],
+    },
+    "test": {
+        "times": [
+            730.5 * DAY_TO_SEC,
+            730.5 * DAY_TO_SEC,
+            730.5 * DAY_TO_SEC,
+            730.5 * DAY_TO_SEC,
+            730.5 * DAY_TO_SEC,
+            600,
+        ],
+        "fluxes": [
+            1.70427e-06,
+            1.17412e-04,
+            3.87673e-04,
+            9.95946e-04,
+            1.58543e-03,
+            5.01221e-01,
+        ],
     },
 }
 

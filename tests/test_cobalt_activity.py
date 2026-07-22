@@ -7,8 +7,12 @@ import numpy as np
 import pytest
 import os
 import json
+from math import pi
+import pandas as pd
+from importlib.resources import as_file, files
 from f4epurity.reaction_rate import calculate_reaction_rate
 from f4epurity.decay_chain_calc import calculate_total_activity
+from f4epurity.dose import extract_dose_factors
 
 
 def test_cobalt_activity_y1_scenario():
@@ -97,4 +101,62 @@ def test_cobalt_activity_y1_scenario():
         f"Co-60 activity {co60_activity:.2f} Bq is not within 1% of expected {expected_activity:.2f} Bq"
     
     print(f"  ✓ Test PASSED (within {tolerance*100}% tolerance)")
+    
+    # ==================== Dose Calculation Tests ====================
+    # Load dose conversion factors
+    dose_matrix_file_path = files("f4epurity.resources").joinpath("F4E_dosematrix.xlsx")
+    with as_file(dose_matrix_file_path) as fp:
+        dose_factors_df = pd.read_excel(fp)
+    
+    # Extract dose conversion factor for Co-60
+    dose_factor = extract_dose_factors('Co060', dose_factors_df)
+    
+    # Check if dose factor was found and convert to float
+    if isinstance(dose_factor, str):
+        # Try alternative naming conventions
+        for name_variant in ['Co-60', 'co060', 'CO060', 'Co60', 'CO60']:
+            dose_factor = extract_dose_factors(name_variant, dose_factors_df)
+            if not isinstance(dose_factor, str):
+                print(f"  Found dose factor using variant: {name_variant}")
+                break
+        else:
+            pytest.fail(f"Could not find dose conversion factor for Co-60 in any naming format")
+    
+    # Ensure dose_factor is numeric
+    dose_factor = float(dose_factor)
+    
+    # Calculate dose at source (point source model)
+    # dose = dose_factor * activity * 1e6  (convert Sv to μSv)
+    dose_at_source = dose_factor * co60_activity * 1e6  # μSv/h/g
+    
+    # Calculate dose at specific distances using 1/r^2 law for point source
+    # dose_at_r = dose_at_source / (4 * pi * r^2)
+    distance_1cm = 1.0  # cm
+    distance_100cm = 100.0  # cm
+    
+    dose_at_1cm = dose_at_source / (4 * pi * distance_1cm**2)
+    dose_at_100cm = dose_at_source / (4 * pi * distance_100cm**2)
+    
+    # Expected values computed by hand from the activity value (233.89 Bq) used as input for RadPro
+    # These reference values validate the dose calculation chain from activity to dose rate
+    expected_dose_1cm = 0.719009897593613  # μSv/h/g at 1 cm
+    expected_dose_100cm = 7.16568455521852E-05  # μSv/h/g at 100 cm
+    dose_tolerance = 0.05  # 5% tolerance
+    
+    # Print dose results
+    print(f"\n✓ Dose calculation results:")
+    print(f"  Dose factor for Co-60: {dose_factor:.6e} Sv/h/Bq/g")
+    print(f"  Dose at 1 cm: {dose_at_1cm:.6e} μSv/h/g")
+    print(f"  Expected: {expected_dose_1cm:.6e} ± {expected_dose_1cm*dose_tolerance:.6e} μSv/h/g")
+    print(f"  Dose at 100 cm: {dose_at_100cm:.6e} μSv/h/g")
+    print(f"  Expected: {expected_dose_100cm:.6e} ± {expected_dose_100cm*dose_tolerance:.6e} μSv/h/g")
+    
+    # Assert dose values match expected within 5% tolerance
+    assert dose_at_1cm == pytest.approx(expected_dose_1cm, rel=dose_tolerance), \
+        f"Dose at 1 cm ({dose_at_1cm:.6e} μSv/h/g) is not within 5% of expected ({expected_dose_1cm:.6e} μSv/h/g)"
+    
+    assert dose_at_100cm == pytest.approx(expected_dose_100cm, rel=dose_tolerance), \
+        f"Dose at 100 cm ({dose_at_100cm:.6e} μSv/h/g) is not within 5% of expected ({expected_dose_100cm:.6e} μSv/h/g)"
+    
+    print(f"  ✓ Dose tests PASSED (within {dose_tolerance*100}% tolerance)")
 

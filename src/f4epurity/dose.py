@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -252,6 +253,50 @@ def write_vtk_file(
     x_max = x[indices[0]]
     y_max = y[indices[1]]
     z_max = z[indices[2]]
+    
+    # Calculate dose at specific distances for accurate near-field values
+    # This workaround addresses the 50 cm mesh discretization limitation
+    specific_distances = [1, 10, 50, 100, 200]  # distances in cm
+    dose_at_distances = {}
+    
+    logging.info("\n--- Dose at Specific Distances ---")
+    if hasattr(dose, "__iter__") and len(dose) > 1:
+        # Line source case - calculate at perpendicular distances
+        logging.info("Line Source Mode:")
+        line_center_x = (x1 + x2) / 2
+        line_center_y = (y1 + y2) / 2
+        line_center_z = (z1 + z2) / 2
+        
+        for dist in specific_distances:
+            # Calculate dose at perpendicular distance from line center
+            # Move in x-direction for simplicity (could be made more general)
+            test_point_x = line_center_x + dist
+            dose_at_distance = dose_from_line_source(
+                dose, x1, y1, z1, x2, y2, z2, 
+                test_point_x, line_center_y, line_center_z
+            )
+            dose_at_distances[f"{dist}_cm_perpendicular"] = float(dose_at_distance)
+            logging.info(f"Perpendicular distance: {dist:6.1f} cm -> Dose: {dose_at_distance:.3e} μSv/h/g")
+    else:
+        # Point source case
+        logging.info("Point Source Mode:")
+        for dist in specific_distances:
+            # Point source: use 1/r^2 formula
+            dose_at_distance = dose[0] / (4 * pi * dist**2)
+            dose_at_distances[f"{dist}_cm"] = float(dose_at_distance)
+            logging.info(f"Distance: {dist:6.1f} cm -> Dose: {dose_at_distance:.3e} μSv/h/g")
+    
+
+    
+    # Save dose at specific distances to a JSON file
+    if x2 is not None and y2 is not None and z2 is not None:
+        dose_distances_file = f"{run_dir}/dose_at_distances_{x1}_{y1}_{z1}_to_{x2}_{y2}_{z2}.json"
+    else:
+        dose_distances_file = f"{run_dir}/dose_at_distances_{x1}_{y1}_{z1}.json"
+    with open(dose_distances_file, "w") as f:
+        json.dump(dose_at_distances, f, indent=4)
+    logging.info(f"Saved dose at specific distances to: {dose_distances_file}")
+    
     # Create the output directory if it doesn't exist
     os.makedirs("output", exist_ok=True)
 

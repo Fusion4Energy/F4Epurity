@@ -91,3 +91,57 @@ Clearly, if point sources are to be considered, [x2, y2, z2] can be omitted. The
 If multiple sources are provided, by default, it is assumed that all the components where the impurities are located have the same mass. In this way, the dose deviation maps can be easily summed together, and the results are provided as mSv/h/g of the component. If this assumption is not valid, masses (in g) for each component need to be provided through the ``--m`` option. This data can also be provided through the ``--sources_csv`` option by adding a column ``m`` to the `.csv` file.
 
 **All results are output per gram of material.**
+
+Dose at Specific Distances
+==========================
+
+For every run, the tool automatically computes and reports the dose deviation at a set of predefined distances from each source: 1, 10, 50, 100, and 200 cm. This feature was introduced to complement the volumetric dose map, which is subject to the spatial discretisation of the input mesh (typically ~50 cm cell size). For near-field assessment — e.g. estimating the dose immediately adjacent to a component — the mesh resolution would be insufficient, so analytical point-source (1/r²) or line-source formulae are used instead to obtain accurate values at those distances.
+
+The results are written to a JSON file in the output directory, named ``dose_at_distances_<x1>_<y1>_<z1>.json`` for a point source, or ``dose_at_distances_<x1>_<y1>_<z1>_to_<x2>_<y2>_<z2>.json`` for a line source. All values are expressed in μSv/h per gram of material. A summary is also printed to the log at the end of each run.
+
+Generating MCNP Source Definition Files
+========================================
+
+The ``--write_sdef`` option allows users to generate an MCNP source definition (``source.sdef``) file containing the photon emission rate due to the impurity variation. This file can be directly used in MCNP simulations for more detailed shielding calculations.
+
+.. code-block:: bash
+
+    f4epurity --element Co --delta_impurity 0.05 --input_flux ./flux_spectrum.vtr --x1 100 --y1 200 --z1 300 --irrad_scenario SA2 --decay_time 1e6 --write_sdef
+
+When this option is used, the code will generate a ``source.sdef`` file containing:
+
+- The source position (x, y, z coordinates)
+- The photon energy spectrum from the activated impurities
+- The photon emission rate (first entry on the FM, tally multiplier card, in MCNP) expressed in photons per second per gram of material
+
+**Important Note on Photon Emission Rate:**
+
+If no mass is specified using the ``--m`` option, the code will assume 1 gram of material by default. The FM value (photon emission rate) will be expressed in units of photons/second/gram.
+
+**Understanding the FM Value - Co60 Example:**
+
+For Co-60, the photon emission rate is approximately **twice** the activity value. This is because Co-60 has:
+
+- 100% gamma emission at 1.17 MeV
+- 100% gamma emission at 1.33 MeV
+
+Each decay of Co-60 produces **two photons**, so the total photon emission rate is ~2× the activity.
+
+**Example for the a generic Location:**
+
+For a calculation with:
+
+- Location: (100, 200, 300) cm
+- Element: Cobalt
+- Δ impurity: 0.05%
+- Irradiation scenario: SA2
+- Decay time: 1×10⁶ seconds
+
+Imagine that due to input neutron flux the results would be:
+
+- **Activity**: 1.084 Bq/g
+- **Photon emission rate (FM)**: 2.17 photons/second/gram
+
+The ratio FM/Activity ≈ 2.0, confirming that each Co-60 decay produces two photons on average.
+
+This FM value can then be scaled by the actual mass of the component, if the ``--m`` argument is provided, to obtain the total photon emission rate for MCNP simulations.

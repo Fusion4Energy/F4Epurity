@@ -142,7 +142,7 @@ def parse_arguments(args_list: Optional[List[str]] = None) -> Namespace:
     parser.add_argument(
         "--write_sdef",
         action="store_true",
-        help="Optional 'write_sdef' argument to generate source.sdef.file for MCNP",
+        help="Optional 'write_sdef' argument to generate source.sdef file for MCNP",
     )
     # Parse the arguments
     args = parser.parse_args(args_list)

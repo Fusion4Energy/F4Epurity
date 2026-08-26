@@ -164,16 +164,30 @@ def calculate_dose_for_source(
             sigma_eff, flux_spectrum = collapse_flux(
                 xs_values, args.input_flux, x1, y1, z1, x2, y2, z2
             )
+            
+            # Log sigma_eff and flux_spectrum
+            if isinstance(sigma_eff, np.ndarray):
+                sigma_value = float(sigma_eff.flat[0])
+            else:
+                sigma_value = float(sigma_eff)
+            logging.info(f"  Reaction {parent} -> {product}: sigma_eff = {sigma_value:.3e} barns")
+            logging.info(f"  Flux spectrum: {flux_spectrum}")
+            
             # Calculate the reaction rate based on the flux and effective cross section
             reaction_rate = calculate_reaction_rate(
-                args.delta_impurity, sigma_eff, flux_spectrum
+                sigma_eff, flux_spectrum
             )
+            
+            # Log the reaction rate for this reaction channel
+            logging.info(f"  Reaction {parent} -> {product}: reaction rate = {reaction_rate}")
 
             # Store the reaction rate in the dictionary
             reaction_rates[parent]["reactions"][product] = reaction_rate
 
         # Call the decay_chain_calculator to determine the activity of each nuclide
         logging.info("Calculating Activities...")
+        logging.info(f"  Irradiation scenario: {args.irrad_scenario}")
+        logging.info(f"  Decay time: {args.decay_time} s")
         activities = calculate_total_activity(
             reaction_rates, args.irrad_scenario, args.decay_time, decay_data
         )

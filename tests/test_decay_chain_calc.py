@@ -32,7 +32,7 @@ def test_calculate_total_activity():
             },
         },
     }
-    irrad_scenario = "DT1"
+    irrad_scenario = "test"
     decay_time = 1e6  # 12 days
 
     # Define the expected output from FISACT-II calculation

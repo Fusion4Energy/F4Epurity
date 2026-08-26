@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def calculate_reaction_rate(delta_impurity, sigma_eff, flux_spectrum):
+def calculate_reaction_rate(sigma_eff, flux_spectrum):
 
     # Check if sigma_eff has length greater than 1 (line source case)
     if isinstance(sigma_eff, np.ndarray) and len(sigma_eff) > 1:
@@ -18,7 +18,7 @@ def calculate_reaction_rate(delta_impurity, sigma_eff, flux_spectrum):
             total_flux = np.sum(flux)
 
             # Calculate the reaction rate
-            reaction_rate = (delta_impurity / 100) * sigma * total_flux * 1e-24
+            reaction_rate = sigma * total_flux * 1e-24
 
             # Add the reaction rate to the list
             reaction_rate_list.append(reaction_rate)
@@ -30,6 +30,6 @@ def calculate_reaction_rate(delta_impurity, sigma_eff, flux_spectrum):
         total_flux = np.sum(flux_spectrum)
 
         # Calculate the reaction rate
-        reaction_rate = (delta_impurity / 100) * sigma_eff * total_flux * 1e-24
+        reaction_rate = sigma_eff * total_flux * 1e-24
 
         return reaction_rate

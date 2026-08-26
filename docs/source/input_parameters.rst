@@ -27,3 +27,4 @@ Optional parameters
 - ``--workstation``: name of the workstation for which to report the max dose e.g. 1, 3, 4 or 'all'.
 - ``--location``: location of the workstation(s) e.g. Nb cell
 - ``--output_all_vtr``: by default is false. If set to true, a dose map resulting from each single source is printed instead of only the global sum of all th sources. depending on the number of sources and the size of the maps this can slow down a bit the assessement. 
+- ``--write_sdef``: if set, generates a ``source.sdef`` file containing the photon emission rate due to the impurity variation. This file can be directly used as an MCNP source definition for more detailed shielding calculations.

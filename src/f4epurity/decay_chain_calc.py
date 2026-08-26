@@ -1,4 +1,5 @@
 import math
+import logging
 from copy import deepcopy
 
 import numpy as np
@@ -11,9 +12,69 @@ YEAR_TO_SEC = 365.25 * DAY_TO_SEC
 
 # Define the known irradiation scenarios
 # (times is a list of length of irradiation periods, fluxes is a list of the relative (to the nominal source strength) source strength for the given irradiation period)
-# REF : ITER_D_8WK64Y
+# old SA2 and generic test and 1 year of irradiation scenarios included for testing purposes.
+# REF for DT1 and DT2: CXM7AR v1.3 Safety irradiation scenario
 IRRAD_SCENARIOS = {
     "DT1": {
+        "times": [
+            240 * DAY_TO_SEC,
+            240 * DAY_TO_SEC,
+            240 * DAY_TO_SEC,
+            240 * DAY_TO_SEC]
+			+ [500, 1900] * 108 
+			+ [500],
+        "fluxes": [
+             0.002858757062,
+             0,
+             0,
+             0.004039548023]
+             + [1,0] * 108 + [1.4],
+    },
+    "DT2": {
+        "times": [
+            240 * DAY_TO_SEC,
+            480 * DAY_TO_SEC,
+            240 * DAY_TO_SEC,
+            480 * DAY_TO_SEC,
+            240 * DAY_TO_SEC,
+            480 * DAY_TO_SEC,
+            240 * DAY_TO_SEC,
+            480 * DAY_TO_SEC,
+            240 * DAY_TO_SEC,
+            11  * DAY_TO_SEC,
+        ]
+        + [600, 1800] * 108 
+        + [2500, 500],
+        "fluxes": [
+             0.106259155,
+             0,
+             0.138954279,
+             0,
+             0.187996966,
+             0,
+             0.187996966,
+             0,
+             0.181433093,
+             0.25
+             ] 
+             + [1,0] * 108 + [1, 1.4],
+    },
+    "SA2": {
+        "times": [
+            2 * YEAR_TO_SEC,
+            10 * YEAR_TO_SEC,
+            0.667 * YEAR_TO_SEC,
+            1.325 * YEAR_TO_SEC,
+        ]
+        + [3920, 400] * 17
+        + [3920, 400] * 3,
+        "fluxes": [0.00536, 0.0412, 0, 0.083] + [0, 1] * 17 + [0, 1.4] * 3,
+    },
+    "Y1": {
+        "times": [365 * DAY_TO_SEC],
+        "fluxes": [1],
+    },
+    "test": {
         "times": [
             730.5 * DAY_TO_SEC,
             730.5 * DAY_TO_SEC,
@@ -30,21 +91,6 @@ IRRAD_SCENARIOS = {
             1.58543e-03,
             5.01221e-01,
         ],
-    },
-    "SA2": {
-        "times": [
-            2 * YEAR_TO_SEC,
-            10 * YEAR_TO_SEC,
-            0.667 * YEAR_TO_SEC,
-            1.325 * YEAR_TO_SEC,
-        ]
-        + [3920, 400] * 17
-        + [3920, 400] * 3,
-        "fluxes": [0.00536, 0.0412, 0, 0.083] + [0, 1] * 17 + [0, 1.4] * 3,
-    },
-    "Y1": {
-        "times": [365 * DAY_TO_SEC],
-        "fluxes": [1],
     },
 }
 
@@ -294,10 +340,12 @@ def calculate_total_activity(
 
     # Get the irradiation scenario and decay constant for the isotope from the dictionaries
     irrad_scenario = deepcopy(IRRAD_SCENARIOS[irrad_scenario])
+    
 
     # Decay times should be appended to the end of the irradiation scenario dictionary
     irrad_scenario["times"].append(decay_time)
     irrad_scenario["fluxes"].append(0)
+
 
     nuclide_dict = convert_names(nuclide_dict)
 
@@ -344,9 +392,20 @@ def calculate_total_activity(
             for nuclide in final_nuclides:
                 # Only output unstable nuclides
                 if "half_life_secs" in decay_data_dic[nuclide]:
-                    activity = (
-                        final_nuclides[nuclide] * decay_data_dic[nuclide]["lambda"][0]
-                    )
+                    n_atoms = final_nuclides[nuclide]
+                    lambda_decay = decay_data_dic[nuclide]["lambda"][0]
+                    activity = n_atoms * lambda_decay
+                    
+                    # Log the computation for first occurrence of each nuclide
+                    if nuclide not in activities:
+                        half_life = decay_data_dic[nuclide]["half_life_secs"]
+                        # Extract scalar values for logging
+                        n_atoms_val = float(n_atoms.flat[0]) if isinstance(n_atoms, np.ndarray) else float(n_atoms)
+                        lambda_val = float(lambda_decay.flat[0]) if isinstance(lambda_decay, np.ndarray) else float(lambda_decay)
+                        activity_val = float(activity.flat[0]) if isinstance(activity, np.ndarray) else float(activity)
+                        logging.info(f"  {nuclide}: N_atoms={n_atoms_val:.6e} per g, lambda={lambda_val:.6e} /s, "
+                                   f"t_half={half_life:.2e} s, Activity={activity_val:.6e} Bq/g")
+                    
                     if nuclide in activities:
                         activities[nuclide].append(activity)
                     else:

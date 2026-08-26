@@ -68,7 +68,7 @@ def write_activity_map(
 
             # Calculate the reaction rate based on the flux and effective cross section
             reaction_rate = calculate_reaction_rate(
-                delta_impurity, sigma_eff, flux_bin_values
+                sigma_eff, flux_bin_values
             )
 
             reaction_rate_array = np.array([reaction_rate])

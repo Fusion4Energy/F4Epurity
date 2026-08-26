@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def calculate_reaction_rate(delta_impurity, sigma_eff, flux_spectrum):
+def calculate_reaction_rate(sigma_eff, flux_spectrum):
 
     # Check if sigma_eff has length greater than 1 (line source case)
     if isinstance(sigma_eff, np.ndarray) and len(sigma_eff) > 1:

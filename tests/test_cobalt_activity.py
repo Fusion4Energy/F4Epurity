@@ -47,8 +47,8 @@ def test_cobalt_activity_y1_scenario():
     sigma_eff_co60m = 3.873241  # barns
     
     # Calculate reaction rates using F4Epurity function
-    reaction_rate_co60 = calculate_reaction_rate(delta_impurity, sigma_eff_co60, flux_spectrum)
-    reaction_rate_co60m = calculate_reaction_rate(delta_impurity, sigma_eff_co60m, flux_spectrum)
+    reaction_rate_co60 = calculate_reaction_rate(sigma_eff_co60, flux_spectrum)
+    reaction_rate_co60m = calculate_reaction_rate(sigma_eff_co60m, flux_spectrum)
     
     # Calculate number of atoms for Co-59
     # For Co-59: natural abundance ~100%, atomic mass ~59
@@ -91,10 +91,6 @@ def test_cobalt_activity_y1_scenario():
     expected_activity = 233.89  # Bq
     tolerance = 0.01  # 1%
     
-    # Print result for user visibility
-    print(f"\n✓ F4Epurity calculation complete:")
-    print(f"  Co-60 activity: {co60_activity:.2f} Bq")
-    print(f"  Expected: {expected_activity:.2f} ± {expected_activity*tolerance:.2f} Bq")
     
     # Assert within tolerance
     assert co60_activity == pytest.approx(expected_activity, rel=tolerance), \
@@ -143,13 +139,6 @@ def test_cobalt_activity_y1_scenario():
     expected_dose_100cm = 7.16568455521852E-05  # μSv/h/g at 100 cm
     dose_tolerance = 0.05  # 5% tolerance
     
-    # Print dose results
-    print(f"\n✓ Dose calculation results:")
-    print(f"  Dose factor for Co-60: {dose_factor:.6e} Sv/h/Bq/g")
-    print(f"  Dose at 1 cm: {dose_at_1cm:.6e} μSv/h/g")
-    print(f"  Expected: {expected_dose_1cm:.6e} ± {expected_dose_1cm*dose_tolerance:.6e} μSv/h/g")
-    print(f"  Dose at 100 cm: {dose_at_100cm:.6e} μSv/h/g")
-    print(f"  Expected: {expected_dose_100cm:.6e} ± {expected_dose_100cm*dose_tolerance:.6e} μSv/h/g")
     
     # Assert dose values match expected within 5% tolerance
     assert dose_at_1cm == pytest.approx(expected_dose_1cm, rel=dose_tolerance), \

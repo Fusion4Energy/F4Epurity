@@ -170,12 +170,12 @@ def calculate_dose_for_source(
                 sigma_value = float(sigma_eff.flat[0])
             else:
                 sigma_value = float(sigma_eff)
-            logging.info(f"  Reaction {parent} -> {product}: sigma_eff = {sigma_value:.6e} barns")
+            logging.info(f"  Reaction {parent} -> {product}: sigma_eff = {sigma_value:.3e} barns")
             logging.info(f"  Flux spectrum: {flux_spectrum}")
             
             # Calculate the reaction rate based on the flux and effective cross section
             reaction_rate = calculate_reaction_rate(
-                args.delta_impurity, sigma_eff, flux_spectrum
+                sigma_eff, flux_spectrum
             )
             
             # Log the reaction rate for this reaction channel

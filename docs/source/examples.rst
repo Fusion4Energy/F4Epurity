@@ -92,6 +92,13 @@ If multiple sources are provided, by default, it is assumed that all the compone
 
 **All results are output per gram of material.**
 
+Dose at Specific Distances
+==========================
+
+For every run, the tool automatically computes and reports the dose deviation at a set of predefined distances from each source: 1, 10, 50, 100, and 200 cm. This feature was introduced to complement the volumetric dose map, which is subject to the spatial discretisation of the input mesh (typically ~50 cm cell size). For near-field assessment — e.g. estimating the dose immediately adjacent to a component — the mesh resolution would be insufficient, so analytical point-source (1/r²) or line-source formulae are used instead to obtain accurate values at those distances.
+
+The results are written to a JSON file in the output directory, named ``dose_at_distances_<x1>_<y1>_<z1>.json`` for a point source, or ``dose_at_distances_<x1>_<y1>_<z1>_to_<x2>_<y2>_<z2>.json`` for a line source. All values are expressed in μSv/h per gram of material. A summary is also printed to the log at the end of each run.
+
 Generating MCNP Source Definition Files
 ========================================
 
@@ -105,7 +112,7 @@ When this option is used, the code will generate a ``source.sdef`` file containi
 
 - The source position (x, y, z coordinates)
 - The photon energy spectrum from the activated impurities
-- The photon emission rate (FM value) expressed in photons per second per gram of material
+- The photon emission rate (first entry on the FM, tally multiplier card, in MCNP) expressed in photons per second per gram of material
 
 **Important Note on Photon Emission Rate:**
 
